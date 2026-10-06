@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - KeepLocate</title>
+    <meta name="description" content="Privacy Policy for KeepLocate Android Application, detailing data collection, location permissions, and Google API User Data compliance.">
+    <style>
+        :root {
+            --primary: #4285F4;
+            --primary-dark: #3367D6;
+            --surface: #ffffff;
+            --background: #f8f9fa;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-decoration: none;
+        }
+        nav a {
+            margin-left: 1.5rem;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        nav a:hover {
+            color: var(--primary);
+        }
+        .container {
+            max-width: 840px;
+            margin: 2.5rem auto;
+            padding: 2.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #1a73e8;
+            font-size: 2.2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        .updated {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+        h2 {
+            color: #202124;
+            margin-top: 2rem;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #f1f3f4;
+            padding-bottom: 0.4rem;
+        }
+        h3 {
+            color: #3c4043;
+            margin-top: 1.25rem;
+            font-size: 1.15rem;
+        }
+        p, li {
+            color: #3c4043;
+            font-size: 1.02rem;
+        }
+        ul {
+            padding-left: 1.5rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        .highlight-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 1.2rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .highlight-box p {
+            margin: 0;
+            color: #174ea6;
+            font-weight: 500;
+        }
+        footer {
+            background-color: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="logo-area" href="index.html">
+            <span>📍</span>
+            <span>KeepLocate</span>
+        </a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="privacy.html" style="color: var(--primary); font-weight: 700;">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <div class="updated">Last Updated: October 6, 2026</div>
+
+        <p>KeepLocate ("we", "our", or "us") is dedicated to protecting your privacy and personal data. This Privacy Policy outlines how our application collects, uses, stores, and protects your information when you use the KeepLocate mobile application on Android.</p>
+
+        <div class="highlight-box">
+            <p><strong>Core Privacy Principle:</strong> KeepLocate operates under an offline-first, local-storage architecture. All your notes, checklists, drawings, voice recordings, and location coordinates reside locally on your device unless you explicitly opt in to Google Tasks sync or Google Drive cloud backup.</p>
+        </div>
+
+        <h2>1. Information We Collect and Process</h2>
+
+        <h3>1.1 User Content</h3>
+        <p>When you create notes, checklists, audio memos, drawings, or take photos within KeepLocate, this data is saved directly in a private SQLite Room database stored in your device's internal storage. We do not operate external intermediate servers, and we never collect, view, or sell your notes or media.</p>
+
+        <h3>1.2 Location Information</h3>
+        <p>To enable location-based reminders (geofencing), KeepLocate requests the following permissions:</p>
+        <ul>
+            <li><strong>Approximate and Precise Location (<code>ACCESS_COARSE_LOCATION</code>, <code>ACCESS_FINE_LOCATION</code>)</strong>: Needed to pinpoint reminder locations chosen by you on the interactive map.</li>
+            <li><strong>Background Location (<code>ACCESS_BACKGROUND_LOCATION</code>)</strong>: Needed so that Android OS can trigger arrival or departure alerts when your device enters or exits a geofenced area, even when the application is closed or in the background.</li>
+        </ul>
+        <p><strong>Important:</strong> Your live location is evaluated exclusively on-device via official Google Play Services Geofencing APIs. KeepLocate does not record location history, does not track your movements, and never transmits your coordinates to any external server.</p>
+
+        <h2>2. Google User Data and Google API Services Policy</h2>
+        <p>KeepLocate provides optional integrations with Google services. If you choose to connect your Google account:</p>
+
+        <h3>2.1 Scopes Requested</h3>
+        <ul>
+            <li><strong>Google Tasks API (<code>https://www.googleapis.com/auth/tasks</code>)</strong>: Used solely to read, create, update, and mark tasks as completed between KeepLocate checklists and your Google Tasks lists.</li>
+            <li><strong>Google Drive Application Data Folder (<code>https://www.googleapis.com/auth/drive.appdata</code>)</strong>: Used solely to save and restore your encrypted application backup archives in your hidden, app-specific Google Drive storage folder. KeepLocate cannot access any other files in your Google Drive.</li>
+        </ul>
+
+        <h3>2.2 Google API Services User Data Policy Compliance</h3>
+        <div class="highlight-box">
+            <p><strong>Limited Use Disclosure:</strong><br>
+            KeepLocate's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+        </div>
+
+        <p>Specifically:</p>
+        <ul>
+            <li>We do <strong>not</strong> share your Google user data with any third parties or advertising networks.</li>
+            <li>We do <strong>not</strong> use your Google user data for advertising, market research, or profiling.</li>
+            <li>We do <strong>not</strong> use your Google user data to train generalized artificial intelligence (AI) or machine learning (ML) models.</li>
+            <li>Data retrieved from Google APIs is processed directly between your device and Google's official endpoints using secure TLS/HTTPS encryption. No intermediate servers or proxies are involved.</li>
+        </ul>
+
+        <h2>3. Data Retention and Deletion</h2>
+        <p>Because your content is stored on your device and inside your own Google account:</p>
+        <ul>
+            <li><strong>Local Data</strong>: You can delete individual notes, empty the Trash, or delete the app at any time, which permanently removes all local data from your device.</li>
+            <li><strong>Google Account Data</strong>: You can disconnect your Google account anytime in KeepLocate's Settings. You can also revoke KeepLocate's access at any time via your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google Account Security Settings</a>. You may delete synchronized tasks at any time directly through Google Tasks or Google Calendar.</li>
+        </ul>
+
+        <h2>4. Device Permissions Overview</h2>
+        <ul>
+            <li><strong>Notifications (<code>POST_NOTIFICATIONS</code>)</strong>: Required on Android 13+ to post reminder alerts and pinned notifications.</li>
+            <li><strong>Exact Alarms (<code>SCHEDULE_EXACT_ALARM</code>)</strong>: Used to trigger user-scheduled time reminders at exact minutes.</li>
+            <li><strong>Biometric Sensor (<code>USE_BIOMETRIC</code>)</strong>: Handled strictly via Android BiometricPrompt to protect locked notes locally. No biometric credentials ever leave Android's secure hardware enclave.</li>
+        </ul>
+
+        <h2>5. Children's Privacy</h2>
+        <p>KeepLocate does not knowingly collect or solicit personal information from children under the age of 13. If you believe that a child has provided personal information to us, please contact us immediately.</p>
+
+        <h2>6. Changes to this Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date.</p>
+
+        <h2>7. Contact Information</h2>
+        <p>If you have any questions, inquiries, or requests regarding this Privacy Policy or your data, please contact:</p>
+        <p>
+            <strong>Developer:</strong> DimiBoy<br>
+            <strong>Email:</strong> <a href="mailto:dimiboy@gmail.com">dimiboy@gmail.com</a><br>
+            <strong>Project Home:</strong> <a href="https://dimiboy.github.io/google-keep-location-reminder/">https://dimiboy.github.io/google-keep-location-reminder/</a>
+        </p>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 KeepLocate. All rights reserved.</p>
+        <p>
+            <a href="index.html">Home</a> | 
+            <a href="privacy.html">Privacy Policy</a> | 
+            <a href="terms.html">Terms of Service</a>
+        </p>
+    </footer>
+</body>
+</html>

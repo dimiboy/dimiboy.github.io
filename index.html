@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeepLocate - Smart Location & Time Reminders for Notes</title>
+    <!-- Google Search Console verification meta tag placeholder -->
+    <meta name="description" content="KeepLocate is a smart note-taking and task reminder app for Android featuring location-based geofence triggers, exact time reminders, and two-way Google Tasks synchronization.">
+    <style>
+        :root {
+            --primary: #4285F4;
+            --primary-dark: #3367D6;
+            --surface: #ffffff;
+            --background: #f8f9fa;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+        nav a {
+            margin-left: 1.5rem;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        nav a:hover {
+            color: var(--primary);
+        }
+        .hero {
+            text-align: center;
+            padding: 4rem 1.5rem 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            color: #1a73e8;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.85rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background-color 0.2s;
+        }
+        .cta-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 2rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+        .feature-card {
+            background: var(--surface);
+            padding: 1.75rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .feature-card h3 {
+            margin-top: 0.5rem;
+            color: #1a73e8;
+        }
+        footer {
+            background-color: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 0.75rem;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-area">
+            <span class="logo-icon">📍</span>
+            <span>KeepLocate</span>
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Never Forget When You Arrive</h1>
+            <p>KeepLocate combines intuitive Google Keep-style note organization with smart GPS geofencing and two-way Google Tasks synchronization.</p>
+            <a class="cta-button" href="https://play.google.com/store/apps/details?id=com.keeplocate.app" target="_blank">Get KeepLocate on Google Play</a>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <h2>📍 Geofenced Reminders</h2>
+                <p>Attach locations to any note or checklist. Get notified automatically when you arrive at or leave your favorite supermarket, office, or hardware store.</p>
+            </div>
+            <div class="feature-card">
+                <h2>🔄 Google Tasks 2-Way Sync</h2>
+                <p>Seamlessly sync your checklists and notes with Google Tasks and Google Calendar. Check off items anywhere, and they update instantly.</p>
+            </div>
+            <div class="feature-card">
+                <h2>🔒 Biometric Lock & Privacy First</h2>
+                <p>All notes and coordinates are stored securely on your local device. Protect sensitive notes with fingerprint or face biometric authentication.</p>
+            </div>
+            <div class="feature-card">
+                <h2>⏰ Exact Alarms & Snooze</h2>
+                <p>Schedule exact time alarms, snooze notifications for later, or repeat reminders based on specific days of the week.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 KeepLocate. All rights reserved.</p>
+        <p>
+            <a href="privacy.html">Privacy Policy</a> | 
+            <a href="terms.html">Terms of Service</a> | 
+            <a href="https://github.com/dimiboy/google-keep-location-reminder" target="_blank">GitHub Repository</a>
+        </p>
+        <p>Contact: <a href="mailto:dimiboy@gmail.com">dimiboy@gmail.com</a></p>
+    </footer>
+</body>
+</html>
