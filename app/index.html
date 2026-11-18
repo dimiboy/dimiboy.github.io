@@ -158,6 +158,11 @@
             background: #fef7e0;
             color: #b06000;
         }
+        .status-pill.status-error {
+            background: #fce8e6;
+            color: #c5221f;
+            cursor: pointer;
+        }
         .status-dot {
             width: 8px;
             height: 8px;
@@ -730,6 +735,8 @@
             }
         }
 
+        let lastDriveError = null;
+
         async function syncDriveNow() {
             if (!accessToken) {
                 initiateGoogleLogin();
@@ -750,7 +757,16 @@
                         showDisconnectedUI();
                         return;
                     }
-                    throw new Error(`Drive list error: ${listRes.status}`);
+                    let errBody = '';
+                    try {
+                        const errJson = await listRes.json();
+                        errBody = errJson?.error?.message || JSON.stringify(errJson);
+                    } catch (e) {
+                        errBody = await listRes.text();
+                    }
+                    console.error('Drive list error:', listRes.status, errBody);
+                    handleDriveError(listRes.status, errBody);
+                    return;
                 }
 
                 const listData = await listRes.json();
@@ -769,17 +785,26 @@
                         parseAndApplyBackupJson(jsonText);
                         updateSyncStatus('connected', 'Synced with Drive');
                         updateBannerConnected(backupFile.modifiedTime);
+                        lastDriveError = null;
+                        return;
+                    } else {
+                        let errBody = '';
+                        try {
+                            const errJson = await fileRes.json();
+                            errBody = errJson?.error?.message || JSON.stringify(errJson);
+                        } catch (e) {
+                            errBody = await fileRes.text();
+                        }
+                        handleDriveError(fileRes.status, errBody);
                         return;
                     }
                 }
 
                 // No remote file yet -> upload local notes as initial backup
                 await uploadNotesToDrive();
-                updateSyncStatus('connected', 'Synced with Drive');
-                updateBannerConnected(new Date().toISOString());
             } catch (err) {
                 console.error('Drive sync failed:', err);
-                updateSyncStatus('connected', 'Offline / Cached');
+                handleDriveError('Network', err.message || 'Network error connecting to Google Drive');
             }
         }
 
@@ -789,49 +814,135 @@
                 const payload = buildBackupPayload();
                 const jsonContent = JSON.stringify(payload, null, 2);
 
-                const boundary = '-------KeepLocateBoundary' + Math.random().toString(36).substring(2);
-                const delimiter = '\r\n--' + boundary + '\r\n';
-                const closeDelimiter = '\r\n--' + boundary + '--';
-
-                const metadata = {
-                    name: DRIVE_BACKUP_FILE_NAME,
-                    mimeType: 'application/json',
-                    parents: ['appDataFolder']
-                };
-
-                const multipartBody =
-                    delimiter +
-                    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-                    JSON.stringify(metadata) +
-                    delimiter +
-                    'Content-Type: application/json\r\n\r\n' +
-                    jsonContent +
-                    closeDelimiter;
-
-                let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-                let method = 'POST';
-
+                let uploadRes;
                 if (driveFileId) {
-                    url = `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`;
-                    method = 'PATCH';
+                    // Update existing backup file: media PATCH
+                    uploadRes = await fetch(
+                        `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': 'application/json; charset=UTF-8'
+                            },
+                            body: jsonContent
+                        }
+                    );
+                } else {
+                    // Create initial backup file in appDataFolder: multipart POST
+                    const boundary = '-------KeepLocateBoundary' + Math.random().toString(36).substring(2);
+                    const delimiter = '\r\n--' + boundary + '\r\n';
+                    const closeDelimiter = '\r\n--' + boundary + '--';
+                    const metadata = {
+                        name: DRIVE_BACKUP_FILE_NAME,
+                        mimeType: 'application/json',
+                        parents: ['appDataFolder']
+                    };
+                    const multipartBody =
+                        delimiter +
+                        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                        JSON.stringify(metadata) +
+                        delimiter +
+                        'Content-Type: application/json\r\n\r\n' +
+                        jsonContent +
+                        closeDelimiter;
+
+                    uploadRes = await fetch(
+                        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': `multipart/related; boundary=${boundary}`
+                            },
+                            body: multipartBody
+                        }
+                    );
                 }
 
-                const uploadRes = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': `multipart/related; boundary=${boundary}`
-                    },
-                    body: multipartBody
-                });
-
-                if (uploadRes.ok) {
-                    const result = await uploadRes.json();
-                    driveFileId = result.id || driveFileId;
-                    console.log('Successfully saved to Google Drive AppData folder');
+                if (!uploadRes.ok) {
+                    let errBody = '';
+                    try {
+                        const errJson = await uploadRes.json();
+                        errBody = errJson?.error?.message || JSON.stringify(errJson);
+                    } catch (e) {
+                        errBody = await uploadRes.text();
+                    }
+                    console.error('Upload to Drive failed:', uploadRes.status, errBody);
+                    handleDriveError(uploadRes.status, errBody);
+                    return;
                 }
+
+                const result = await uploadRes.json();
+                driveFileId = result.id || driveFileId;
+                updateSyncStatus('connected', 'Synced with Drive');
+                updateBannerConnected(new Date().toISOString());
+                lastDriveError = null;
+                console.log('Successfully saved to Google Drive AppData folder');
             } catch (e) {
-                console.error('Upload to Drive failed:', e);
+                console.error('Upload to Drive exception:', e);
+                handleDriveError('Upload', e.message || 'Upload exception');
+            }
+        }
+
+        function handleDriveError(status, message) {
+            lastDriveError = { status, message };
+            updateSyncStatus('error', 'Sync Error');
+            
+            const container = document.createElement('div');
+            const isServiceDisabled = (typeof message === 'string' && (
+                message.includes('has not been used in project') ||
+                message.includes('disabled') ||
+                message.includes('SERVICE_DISABLED')
+            )) || status === 403;
+
+            if (isServiceDisabled) {
+                const titleP = document.createElement('p');
+                titleP.style.fontWeight = '600';
+                titleP.style.color = '#c5221f';
+                titleP.style.marginBottom = '0.5rem';
+                titleP.textContent = 'Google Drive API is not enabled yet in your Google Cloud Project:';
+                
+                const descP = document.createElement('p');
+                descP.style.fontSize = '0.92rem';
+                descP.style.color = '#3c4043';
+                descP.textContent = 'Your Google Cloud Project (964583081853) needs the "Google Drive API" enabled to store and sync your private KeepLocate notes.';
+                
+                const btnWrapper = document.createElement('div');
+                btnWrapper.style.margin = '1rem 0';
+                const link = document.createElement('a');
+                link.href = 'https://console.cloud.google.com/apis/library/drive.googleapis.com?project=964583081853';
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.className = 'btn btn-primary';
+                link.style.display = 'inline-block';
+                link.style.textDecoration = 'none';
+                link.style.fontWeight = '600';
+                link.textContent = '👉 Click Here to Enable Google Drive API in Google Cloud Console';
+                btnWrapper.appendChild(link);
+
+                const footerP = document.createElement('p');
+                footerP.style.fontSize = '0.85rem';
+                footerP.style.color = '#5f6368';
+                footerP.textContent = '1. Click the button above to open Google Cloud Console. 2. Tap the blue "ENABLE" button. 3. Return here and tap "🔄 Sync Now".';
+
+                container.appendChild(titleP);
+                container.appendChild(descP);
+                container.appendChild(btnWrapper);
+                container.appendChild(footerP);
+
+                showInfoModalNode('Google Drive API Required', container);
+            } else {
+                const p1 = document.createElement('p');
+                p1.style.fontWeight = '600';
+                p1.textContent = `Sync Error (${status}):`;
+                const p2 = document.createElement('p');
+                p2.style.fontSize = '0.9rem';
+                p2.style.color = '#5f6368';
+                p2.textContent = message || 'Could not contact Google Drive.';
+                container.appendChild(p1);
+                container.appendChild(p2);
+                showInfoModalNode('Sync Warning', container);
             }
         }
 
@@ -972,6 +1083,13 @@
             const text = document.getElementById('syncText');
             pill.className = 'status-pill status-' + state;
             text.textContent = label;
+            if (state === 'error') {
+                pill.onclick = () => {
+                    if (lastDriveError) handleDriveError(lastDriveError.status, lastDriveError.message);
+                };
+            } else {
+                pill.onclick = null;
+            }
         }
 
         function updateBannerConnected(modifiedIso) {
