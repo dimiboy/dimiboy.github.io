@@ -298,15 +298,45 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .checklist-item {
+        .card-checklist {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 4px;
+            margin: 6px 0 2px;
+        }
+        .card-checklist-item {
+            display: flex;
+            align-items: flex-start;
             gap: 8px;
             font-size: 0.92rem;
+            line-height: 1.35;
+            color: var(--text-primary);
         }
-        .checklist-item.done {
+        .card-checklist-item input[type="checkbox"] {
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+            width: 15px;
+            height: 15px;
+        }
+        .card-checklist-item.done span {
             text-decoration: line-through;
             color: var(--text-secondary);
+        }
+        .card-checklist-more {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 3px;
+            padding-left: 23px;
+        }
+        .modal-checklist-row {
+            padding: 3px 0;
+        }
+        .modal-checklist-row input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--primary);
         }
         .note-chips {
             display: flex;
@@ -515,9 +545,12 @@
         <input type="file" id="backupFileInput" accept=".json,application/json" style="display: none;" onchange="handleFileImport(event)">
 
         <div class="create-bar-wrapper">
-            <div class="create-bar" onclick="openNewNoteModal()">
-                <span>Take a note or checklist...</span>
-                <span>✏️</span>
+            <div class="create-bar">
+                <span onclick="openNewNoteModal(false)" style="flex: 1; cursor: pointer;">Take a note or checklist...</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn" onclick="openNewNoteModal(true)" title="New list" style="padding: 4px 8px; border: none; background: transparent; cursor: pointer; font-size: 1.15rem; line-height: 1;">☑️</button>
+                    <span onclick="openNewNoteModal(false)" style="font-size: 1.15rem; cursor: pointer; line-height: 1;" title="New note">✏️</span>
+                </div>
             </div>
         </div>
 
@@ -536,6 +569,15 @@
             <input type="text" id="modalTitle" class="title-input" placeholder="Title">
             <textarea id="modalContent" class="content-input" placeholder="Take a note..."></textarea>
             
+            <div id="modalChecklistArea" style="display: none; flex-direction: column; gap: 8px; margin: 8px 0;">
+                <div id="modalChecklistItems" style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto;"></div>
+                <div class="modal-add-item-row" style="display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px dashed rgba(0,0,0,0.12);">
+                    <span style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1; padding-left: 2px;">+</span>
+                    <input type="text" id="newChecklistItemInput" placeholder="List item" style="flex: 1; border: none; background: transparent; font-size: 0.95rem; outline: none; color: var(--text-primary); font-family: inherit;" onkeydown="handleNewChecklistKeyDown(event)">
+                    <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.82rem;" onclick="addChecklistItemFromInput()">Add</button>
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <div class="color-palette">
                     <div class="color-dot" title="Default" style="background: var(--card-default);" onclick="setCardColor('#ffffff')"></div>
@@ -551,7 +593,8 @@
                     <div class="color-dot" title="Chalk" style="background: var(--card-chalk);" onclick="setCardColor('#e6c9a8')"></div>
                     <div class="color-dot" title="Gray" style="background: var(--card-gray);" onclick="setCardColor('#e8eaed')"></div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn" id="btnToggleChecklist" onclick="toggleModalMode()" style="font-size: 0.82rem; padding: 6px 10px;" title="Toggle checklist / note">☑️ List</button>
                     <button class="btn" onclick="deleteCurrentNote()" id="btnDeleteNote" style="display: none; color: #d93025;">Delete</button>
                     <button class="btn btn-primary" onclick="saveNote()">Done</button>
                 </div>
@@ -597,11 +640,17 @@
         const WELCOME_NOTE = {
             id: 'welcome-note',
             title: 'Welcome to KeepLocate Web 📍',
-            content: 'KeepLocate companion lets you view and edit your notes from any browser.\n\n• To sync your Android notes: Click "Sign in with Google" above.\n• To import an existing backup: Click "Import Backup JSON".\n• Privacy first: Your notes are stored in your private Google Drive AppData folder or local browser storage.',
+            content: '',
             color: '#cbf0f8',
+            colorId: 'fog',
             isPinned: true,
             location: null,
-            reminder: null
+            reminder: null,
+            checklistItems: [
+                { text: 'Sync your Android notes with Google Drive', isChecked: true, position: 0 },
+                { text: 'Check off list items directly from web cards', isChecked: false, position: 1 },
+                { text: 'Private & secure in your Google Drive AppData folder', isChecked: false, position: 2 }
+            ]
         };
 
         let notes = [];
@@ -611,6 +660,19 @@
         let userEmail = null;
         let driveFileId = null;
         let tokenClient = null;
+        let isModalChecklistMode = false;
+        let uploadDebounceTimer = null;
+        let backupLocationPoints = [];
+        let backupLocationGroups = [];
+        let backupCustomLabels = [];
+
+        function debouncedUploadToDrive(delay = 1500) {
+            if (!accessToken) return;
+            if (uploadDebounceTimer) clearTimeout(uploadDebounceTimer);
+            uploadDebounceTimer = setTimeout(() => {
+                uploadNotesToDrive();
+            }, delay);
+        }
 
         // Initialize state on load
         function initApp() {
@@ -959,6 +1021,12 @@
         function parseAndApplyBackupJson(jsonText) {
             try {
                 const payload = JSON.parse(jsonText);
+                if (payload) {
+                    backupLocationPoints = Array.isArray(payload.locationPoints) ? payload.locationPoints : [];
+                    backupLocationGroups = Array.isArray(payload.locationGroups) ? payload.locationGroups : [];
+                    backupCustomLabels = Array.isArray(payload.customLabels) ? payload.customLabels : [];
+                }
+
                 if (payload && Array.isArray(payload.notes)) {
                     notes = payload.notes.map((item, index) => {
                         let hexColor = COLOR_MAP[item.colorId] || item.color || '#ffffff';
@@ -976,16 +1044,28 @@
                             });
                         }
 
+                        const rawItems = Array.isArray(item.checklistItems) ? item.checklistItems : [];
+                        const cleanItems = rawItems.map((ci, idx) => ({
+                            text: typeof ci.text === 'string' ? ci.text : '',
+                            isChecked: !!ci.isChecked,
+                            position: typeof ci.position === 'number' ? ci.position : idx,
+                            details: typeof ci.details === 'string' ? ci.details : ''
+                        }));
+
                         return {
                             id: 'note-' + (item.createdAt || Date.now() + index),
                             title: item.title || '',
                             content: item.content || '',
+                            type: item.type || (cleanItems.length > 0 ? 'CHECKLIST' : 'TEXT'),
                             color: hexColor,
                             colorId: item.colorId || 'default',
                             isPinned: !!item.isPinned,
                             location: locationStr,
                             reminder: reminderStr,
-                            checklistItems: item.checklistItems || [],
+                            rawAttachedLocations: item.attachedLocations || [],
+                            rawAttachedLocationNames: item.attachedLocationNames || [],
+                            timeReminderMillis: item.timeReminderMillis || null,
+                            checklistItems: cleanItems,
                             createdAt: item.createdAt || Date.now(),
                             updatedAt: item.updatedAt || Date.now()
                         };
@@ -1003,25 +1083,38 @@
                 version: 1,
                 exportedAt: Date.now(),
                 appName: 'KeepLocate',
-                notes: notes.map(n => ({
-                    title: n.title || '',
-                    content: n.content || '',
-                    type: n.checklistItems && n.checklistItems.length > 0 ? 'CHECKLIST' : 'TEXT',
-                    isPinned: !!n.isPinned,
-                    isArchived: false,
-                    isLocked: false,
-                    colorId: n.colorId || 'default',
-                    labels: [],
-                    checklistItems: n.checklistItems || [],
-                    attachedLocationNames: n.location ? [n.location] : [],
-                    attachedLocations: [],
-                    timeReminderMillis: null,
-                    createdAt: n.createdAt || Date.now(),
-                    updatedAt: n.updatedAt || Date.now()
-                })),
-                locationPoints: [],
-                locationGroups: [],
-                customLabels: []
+                notes: notes.map(n => {
+                    const rawItems = Array.isArray(n.checklistItems) ? n.checklistItems : [];
+                    const cleanItems = rawItems.map((ci, idx) => ({
+                        text: typeof ci.text === 'string' ? ci.text : '',
+                        isChecked: !!ci.isChecked,
+                        position: typeof ci.position === 'number' ? ci.position : idx,
+                        details: typeof ci.details === 'string' ? ci.details : ''
+                    }));
+                    const isList = cleanItems.length > 0 || n.type === 'CHECKLIST';
+
+                    return {
+                        title: n.title || '',
+                        content: n.content || '',
+                        type: isList ? 'CHECKLIST' : 'TEXT',
+                        isPinned: !!n.isPinned,
+                        isArchived: false,
+                        isLocked: false,
+                        colorId: n.colorId || 'default',
+                        labels: [],
+                        checklistItems: cleanItems,
+                        attachedLocationNames: n.rawAttachedLocationNames && n.rawAttachedLocationNames.length > 0
+                            ? n.rawAttachedLocationNames
+                            : (n.location ? [n.location] : []),
+                        attachedLocations: n.rawAttachedLocations || [],
+                        timeReminderMillis: n.timeReminderMillis || null,
+                        createdAt: n.createdAt || Date.now(),
+                        updatedAt: n.updatedAt || Date.now()
+                    };
+                }),
+                locationPoints: backupLocationPoints,
+                locationGroups: backupLocationGroups,
+                customLabels: backupCustomLabels
             };
         }
 
@@ -1130,12 +1223,18 @@
 
         // Notes Rendering (Safe DOM APIs - Zero XSS)
         function renderNotes() {
-            const query = (document.getElementById('searchInput').value || '').toLowerCase();
-            const filtered = notes.filter(n => 
-                (n.title && n.title.toLowerCase().includes(query)) ||
-                (n.content && n.content.toLowerCase().includes(query)) ||
-                (n.location && n.location.toLowerCase().includes(query))
-            );
+            const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const filtered = notes.filter(n => {
+                if (!query) return true;
+                const matchTitle = n.title && n.title.toLowerCase().includes(query);
+                const matchContent = n.content && n.content.toLowerCase().includes(query);
+                const matchLocation = n.location && n.location.toLowerCase().includes(query);
+                const matchChecklist = n.checklistItems && n.checklistItems.some(
+                    item => (item.text && item.text.toLowerCase().includes(query)) ||
+                            (item.details && item.details.toLowerCase().includes(query))
+                );
+                return matchTitle || matchContent || matchLocation || matchChecklist;
+            });
 
             const pinned = filtered.filter(n => n.isPinned);
             const others = filtered.filter(n => !n.isPinned);
@@ -1165,7 +1264,7 @@
             card.className = 'note-card';
             card.style.backgroundColor = n.color || '#ffffff';
             card.onclick = (e) => {
-                if (e.target.classList.contains('pin-btn')) return;
+                if (e.target.classList.contains('pin-btn') || e.target.classList.contains('card-cb')) return;
                 openEditNoteModal(n.id);
             };
 
@@ -1178,18 +1277,77 @@
                 n.isPinned = !n.isPinned;
                 saveToLocal();
                 renderNotes();
-                if (accessToken) uploadNotesToDrive();
+                if (accessToken) debouncedUploadToDrive(1000);
             };
-
-            const title = document.createElement('h3');
-            title.textContent = n.title || 'Untitled';
-
-            const content = document.createElement('p');
-            content.textContent = n.content || '';
-
             card.appendChild(pinBtn);
-            card.appendChild(title);
-            card.appendChild(content);
+
+            if (n.title && n.title.trim()) {
+                const title = document.createElement('h3');
+                title.textContent = n.title;
+                card.appendChild(title);
+            }
+
+            if (n.content && n.content.trim()) {
+                const content = document.createElement('p');
+                content.textContent = n.content;
+                card.appendChild(content);
+            }
+
+            if (n.checklistItems && n.checklistItems.length > 0) {
+                const checklistContainer = document.createElement('div');
+                checklistContainer.className = 'card-checklist';
+
+                // Display items: unchecked first, then checked (preserving original index for toggling)
+                const indexedItems = n.checklistItems.map((item, originalIndex) => ({ item, originalIndex }));
+                indexedItems.sort((a, b) => {
+                    if (a.item.isChecked === b.item.isChecked) {
+                        return (a.item.position || 0) - (b.item.position || 0);
+                    }
+                    return a.item.isChecked ? 1 : -1;
+                });
+
+                const maxPreview = 8;
+                const displayItems = indexedItems.slice(0, maxPreview);
+
+                displayItems.forEach(({ item, originalIndex }) => {
+                    const row = document.createElement('div');
+                    row.className = 'card-checklist-item' + (item.isChecked ? ' done' : '');
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.className = 'card-cb';
+                    cb.checked = !!item.isChecked;
+                    cb.title = item.isChecked ? 'Mark uncompleted' : 'Mark completed';
+                    cb.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleCardChecklistItem(n.id, originalIndex);
+                    };
+
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = item.text || '';
+
+                    row.appendChild(cb);
+                    row.appendChild(textSpan);
+                    checklistContainer.appendChild(row);
+                });
+
+                if (indexedItems.length > maxPreview) {
+                    const more = document.createElement('div');
+                    more.className = 'card-checklist-more';
+                    more.textContent = `+ ${indexedItems.length - maxPreview} more items`;
+                    checklistContainer.appendChild(more);
+                }
+
+                card.appendChild(checklistContainer);
+            }
+
+            if (!n.title && !n.content && (!n.checklistItems || n.checklistItems.length === 0)) {
+                const emptyP = document.createElement('p');
+                emptyP.style.color = 'var(--text-secondary)';
+                emptyP.style.fontStyle = 'italic';
+                emptyP.textContent = 'Empty note';
+                card.appendChild(emptyP);
+            }
 
             if (n.location || n.reminder) {
                 const chips = document.createElement('div');
@@ -1212,16 +1370,206 @@
             return card;
         }
 
+        function toggleCardChecklistItem(noteId, itemIndex) {
+            const note = notes.find(n => n.id === noteId);
+            if (!note || !note.checklistItems || !note.checklistItems[itemIndex]) return;
+            note.checklistItems[itemIndex].isChecked = !note.checklistItems[itemIndex].isChecked;
+            note.updatedAt = Date.now();
+            saveToLocal();
+            renderNotes();
+            if (accessToken) debouncedUploadToDrive(1500);
+        }
+
         // Modal Note Operations
-        function openNewNoteModal() {
+        function setModalMode(isChecklist) {
+            isModalChecklistMode = isChecklist;
+            const contentArea = document.getElementById('modalContent');
+            const checklistArea = document.getElementById('modalChecklistArea');
+            const toggleBtn = document.getElementById('btnToggleChecklist');
+
+            if (isChecklist) {
+                contentArea.style.display = 'none';
+                checklistArea.style.display = 'flex';
+                if (toggleBtn) {
+                    toggleBtn.textContent = '📝 Note';
+                    toggleBtn.title = 'Switch to regular text note';
+                }
+            } else {
+                contentArea.style.display = 'block';
+                checklistArea.style.display = 'none';
+                if (toggleBtn) {
+                    toggleBtn.textContent = '☑️ List';
+                    toggleBtn.title = 'Switch to checklist';
+                }
+            }
+        }
+
+        function toggleModalMode() {
+            if (!isModalChecklistMode) {
+                const content = document.getElementById('modalContent').value;
+                const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                const items = lines.map((line, idx) => ({
+                    text: line.replace(/^[-*•]\s*/, '').replace(/^\[[ xX]\]\s*/, ''),
+                    isChecked: /^\[[xX]\]/.test(line),
+                    position: idx,
+                    details: ''
+                }));
+                renderModalChecklistItems(items);
+                setModalMode(true);
+            } else {
+                const items = getModalChecklistItems();
+                const text = items.map(it => (it.isChecked ? '✓ ' : '• ') + it.text).join('\n');
+                document.getElementById('modalContent').value = text;
+                setModalMode(false);
+            }
+        }
+
+        function renderModalChecklistItems(items) {
+            const container = document.getElementById('modalChecklistItems');
+            container.replaceChildren();
+            (items || []).forEach((item, index) => {
+                const row = createModalChecklistRow(item.text, item.isChecked, index);
+                container.appendChild(row);
+            });
+            const input = document.getElementById('newChecklistItemInput');
+            if (input) input.value = '';
+        }
+
+        function createModalChecklistRow(text = '', isChecked = false, index = 0) {
+            const row = document.createElement('div');
+            row.className = 'modal-checklist-row' + (isChecked ? ' done' : '');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = !!isChecked;
+            cb.style.accentColor = 'var(--primary)';
+            cb.style.width = '16px';
+            cb.style.height = '16px';
+            cb.style.cursor = 'pointer';
+            cb.onchange = () => {
+                if (cb.checked) {
+                    row.classList.add('done');
+                    textInput.style.textDecoration = 'line-through';
+                    textInput.style.color = 'var(--text-secondary)';
+                } else {
+                    row.classList.remove('done');
+                    textInput.style.textDecoration = 'none';
+                    textInput.style.color = 'var(--text-primary)';
+                }
+            };
+
+            const textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.className = 'modal-cl-text';
+            textInput.value = text;
+            textInput.placeholder = 'List item';
+            textInput.style.flex = '1';
+            textInput.style.border = 'none';
+            textInput.style.background = 'transparent';
+            textInput.style.fontSize = '0.95rem';
+            textInput.style.outline = 'none';
+            textInput.style.color = isChecked ? 'var(--text-secondary)' : 'var(--text-primary)';
+            textInput.style.textDecoration = isChecked ? 'line-through' : 'none';
+            textInput.style.fontFamily = 'inherit';
+            textInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const nextRow = row.nextElementSibling;
+                    if (nextRow) {
+                        const nextInput = nextRow.querySelector('.modal-cl-text');
+                        if (nextInput) nextInput.focus();
+                    } else {
+                        const newInp = document.getElementById('newChecklistItemInput');
+                        if (newInp) newInp.focus();
+                    }
+                }
+            };
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.textContent = '✕';
+            delBtn.title = 'Remove item';
+            delBtn.style.background = 'transparent';
+            delBtn.style.border = 'none';
+            delBtn.style.cursor = 'pointer';
+            delBtn.style.color = 'var(--text-secondary)';
+            delBtn.style.fontSize = '0.85rem';
+            delBtn.style.padding = '2px 6px';
+            delBtn.onclick = () => {
+                row.remove();
+            };
+
+            row.appendChild(cb);
+            row.appendChild(textInput);
+            row.appendChild(delBtn);
+            return row;
+        }
+
+        function addChecklistItemFromInput() {
+            const input = document.getElementById('newChecklistItemInput');
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            const container = document.getElementById('modalChecklistItems');
+            const row = createModalChecklistRow(text, false, container.children.length);
+            container.appendChild(row);
+            input.value = '';
+            input.focus();
+        }
+
+        function handleNewChecklistKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addChecklistItemFromInput();
+            }
+        }
+
+        function getModalChecklistItems() {
+            const container = document.getElementById('modalChecklistItems');
+            if (!container) return [];
+            const rows = container.querySelectorAll('.modal-checklist-row');
+            const items = [];
+            rows.forEach((row, index) => {
+                const cb = row.querySelector('input[type="checkbox"]');
+                const textInput = row.querySelector('.modal-cl-text');
+                const text = textInput ? textInput.value.trim() : '';
+                if (text) {
+                    items.push({
+                        text: text,
+                        isChecked: cb ? cb.checked : false,
+                        position: index,
+                        details: ''
+                    });
+                }
+            });
+            return items;
+        }
+
+        function openNewNoteModal(isChecklist = false) {
             currentNoteId = null;
             document.getElementById('modalTitle').value = '';
             document.getElementById('modalContent').value = '';
             selectedColor = '#ffffff';
             document.getElementById('modalCard').style.backgroundColor = selectedColor;
             document.getElementById('btnDeleteNote').style.display = 'none';
-            document.getElementById('noteModal').classList.add('open');
-            document.getElementById('modalTitle').focus();
+
+            setModalMode(isChecklist);
+            if (isChecklist) {
+                renderModalChecklistItems([]);
+                document.getElementById('noteModal').classList.add('open');
+                setTimeout(() => {
+                    const newInp = document.getElementById('newChecklistItemInput');
+                    if (newInp) newInp.focus();
+                }, 50);
+            } else {
+                document.getElementById('noteModal').classList.add('open');
+                setTimeout(() => {
+                    document.getElementById('modalTitle').focus();
+                }, 50);
+            }
         }
 
         function openEditNoteModal(id) {
@@ -1229,10 +1577,19 @@
             if (!note) return;
             currentNoteId = id;
             document.getElementById('modalTitle').value = note.title || '';
-            document.getElementById('modalContent').value = note.content || '';
             selectedColor = note.color || '#ffffff';
             document.getElementById('modalCard').style.backgroundColor = selectedColor;
             document.getElementById('btnDeleteNote').style.display = 'inline-block';
+
+            const hasChecklist = note.checklistItems && note.checklistItems.length > 0;
+            if (hasChecklist) {
+                setModalMode(true);
+                renderModalChecklistItems(note.checklistItems);
+            } else {
+                setModalMode(false);
+                document.getElementById('modalContent').value = note.content || '';
+            }
+
             document.getElementById('noteModal').classList.add('open');
         }
 
@@ -1243,9 +1600,27 @@
 
         function saveNote() {
             const title = document.getElementById('modalTitle').value.trim();
-            const content = document.getElementById('modalContent').value.trim();
+            const isChecklist = isModalChecklistMode;
+            let checklistItems = [];
+            let content = '';
 
-            if (!title && !content) {
+            if (isChecklist) {
+                checklistItems = getModalChecklistItems();
+                const pending = document.getElementById('newChecklistItemInput');
+                if (pending && pending.value.trim()) {
+                    checklistItems.push({
+                        text: pending.value.trim(),
+                        isChecked: false,
+                        position: checklistItems.length,
+                        details: ''
+                    });
+                    pending.value = '';
+                }
+            } else {
+                content = document.getElementById('modalContent').value.trim();
+            }
+
+            if (!title && !content && checklistItems.length === 0) {
                 closeModal();
                 return;
             }
@@ -1254,17 +1629,27 @@
                 const note = notes.find(n => n.id === currentNoteId);
                 if (note) {
                     note.title = title;
-                    note.content = content;
                     note.color = selectedColor;
                     note.updatedAt = Date.now();
+                    if (isChecklist) {
+                        note.checklistItems = checklistItems;
+                        note.type = 'CHECKLIST';
+                        if (!note.content) note.content = '';
+                    } else {
+                        note.content = content;
+                        note.checklistItems = [];
+                        note.type = 'TEXT';
+                    }
                 }
             } else {
                 notes.unshift({
                     id: 'note-' + Date.now(),
                     title: title,
-                    content: content,
+                    content: isChecklist ? '' : content,
+                    type: isChecklist ? 'CHECKLIST' : 'TEXT',
                     color: selectedColor,
                     isPinned: false,
+                    checklistItems: isChecklist ? checklistItems : [],
                     createdAt: Date.now(),
                     updatedAt: Date.now()
                 });
@@ -1273,7 +1658,7 @@
             saveToLocal();
             renderNotes();
             closeModal();
-            if (accessToken) uploadNotesToDrive();
+            if (accessToken) debouncedUploadToDrive(500);
         }
 
         function deleteCurrentNote() {
