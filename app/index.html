@@ -800,8 +800,18 @@
                     }
                 }
 
-                // No remote file yet -> upload local notes as initial backup
-                await uploadNotesToDrive();
+                // No remote file yet -> only upload if user explicitly created or imported notes
+                const hasCustomNotes = notes.length > 0 && !notes.every(n => n.id === 'welcome-1');
+                if (hasCustomNotes) {
+                    await uploadNotesToDrive();
+                } else {
+                    updateSyncStatus('connected', 'Connected (No notes on Drive yet)');
+                    const bannerTitle = document.getElementById('bannerTitle');
+                    const bannerDesc = document.getElementById('bannerDesc');
+                    if (bannerTitle) bannerTitle.textContent = 'Drive Connected (No Cloud Notes Found)';
+                    if (bannerDesc) bannerDesc.textContent = 'Drive is connected! Tap "Sync Now" in KeepLocate on your Android phone to upload your notes here.';
+                    lastDriveError = null;
+                }
             } catch (err) {
                 console.error('Drive sync failed:', err);
                 handleDriveError('Network', err.message || 'Network error connecting to Google Drive');
