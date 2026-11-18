@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googleapis.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>KeepLocate Web App</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --primary: #4285F4;
@@ -18,11 +19,17 @@
             --text-secondary: #5f6368;
             --border: #dadce0;
             --card-default: #ffffff;
-            --card-yellow: #fff8e1;
-            --card-green: #e8f5e9;
-            --card-blue: #e3f2fd;
-            --card-pink: #fce4ec;
-            --card-purple: #f3e5f5;
+            --card-coral: #f28b82;
+            --card-peach: #fbbc04;
+            --card-sand: #fff475;
+            --card-mint: #ccff90;
+            --card-sage: #a7ffeb;
+            --card-fog: #cbf0f8;
+            --card-storm: #aecbfa;
+            --card-blossom: #d7aefb;
+            --card-clay: #fdcfe8;
+            --card-chalk: #e6c9a8;
+            --card-gray: #e8eaed;
         }
         * {
             box-sizing: border-box;
@@ -61,7 +68,7 @@
         }
         .header-search {
             flex: 1;
-            max-width: 600px;
+            max-width: 550px;
             display: flex;
             align-items: center;
             background: #f1f3f4;
@@ -86,22 +93,23 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
             flex-shrink: 0;
         }
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid var(--border);
             background: var(--surface);
             color: var(--text-primary);
             transition: all 0.15s;
+            text-decoration: none;
         }
         .btn:hover {
             background: #f8f9fa;
@@ -114,20 +122,47 @@
         .btn-primary:hover {
             background: var(--primary-dark);
         }
+        .btn-google {
+            background: #ffffff;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            box-shadow: 0 1px 2px rgba(60,64,67,0.1);
+        }
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #c6c9ce;
+            box-shadow: 0 1px 3px rgba(60,64,67,0.2);
+        }
+        .btn-sm {
+            padding: 0.35rem 0.65rem;
+            font-size: 0.8rem;
+        }
         .status-pill {
             font-size: 0.8rem;
             padding: 0.35rem 0.75rem;
             border-radius: 20px;
-            background: #e6f4ea;
-            color: #137333;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        .status-pill.unpaired {
+        .status-pill.status-local {
+            background: #e8eaed;
+            color: #5f6368;
+        }
+        .status-pill.status-connected {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        .status-pill.status-syncing {
             background: #fef7e0;
             color: #b06000;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
         }
         main {
             flex: 1;
@@ -136,6 +171,55 @@
             margin: 0 auto;
             padding: 1.5rem;
         }
+        /* Top Banner */
+        .sync-banner {
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            transition: all 0.2s;
+        }
+        .sync-banner.banner-disconnected {
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+        }
+        .sync-banner.banner-connected {
+            background: #e6f4ea;
+            border: 1px solid #ceead6;
+        }
+        .sync-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 260px;
+        }
+        .sync-banner-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+        .sync-banner-text h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: var(--text-primary);
+        }
+        .sync-banner-text p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .sync-banner-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .create-bar-wrapper {
             max-width: 600px;
             margin: 0 auto 2rem;
@@ -247,7 +331,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.45);
             display: none;
             align-items: center;
             justify-content: center;
@@ -291,10 +375,13 @@
             border-top: 1px solid var(--border);
             padding-top: 0.75rem;
             margin-top: 0.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .color-palette {
             display: flex;
             gap: 6px;
+            flex-wrap: wrap;
         }
         .color-dot {
             width: 22px;
@@ -302,33 +389,56 @@
             border-radius: 50%;
             border: 1px solid var(--border);
             cursor: pointer;
+            transition: transform 0.1s;
         }
-        /* Pairing dialog */
-        .pairing-banner {
-            background: #e8f0fe;
-            border: 1px solid #c2e7ff;
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
+        .color-dot:hover {
+            transform: scale(1.15);
+        }
+        /* Auth Info Dialog */
+        .info-modal {
+            max-width: 480px;
+            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
             gap: 1rem;
         }
-        .pairing-banner-text {
+        .info-modal h3 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        .info-modal p {
             font-size: 0.92rem;
-            color: #001d35;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
-        .pairing-banner-text strong {
-            display: block;
-            margin-bottom: 2px;
+        .info-modal ol {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding-left: 1.25rem;
+            line-height: 1.6;
         }
-        @media (max-width: 600px) {
+        .info-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 0.5rem;
+        }
+        @media (max-width: 650px) {
             header {
                 padding: 0.5rem 1rem;
             }
             .header-search {
                 display: none;
+            }
+            .header-right {
+                gap: 0.4rem;
+            }
+            .sync-banner {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -344,22 +454,60 @@
             <input type="text" id="searchInput" placeholder="Search notes and locations...">
         </div>
         <div class="header-right">
-            <div id="syncStatus" class="status-pill">
-                <span>🔄</span>
-                <span id="syncText">Sync Active</span>
+            <!-- Sync Status Pill -->
+            <div id="syncStatus" class="status-pill status-local">
+                <span class="status-dot"></span>
+                <span id="syncText">Local Mode</span>
             </div>
+
+            <!-- Login / Account Section -->
+            <div id="loggedOutArea" style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn btn-google" id="btnLoginHeader" onclick="initiateGoogleLogin()">
+                    <svg width="16" height="16" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>Sign in with Google</span>
+                </button>
+            </div>
+
+            <div id="loggedInArea" style="display: none; align-items: center; gap: 8px;">
+                <span id="userAccountEmail" style="font-size: 0.82rem; color: var(--text-secondary); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                <button class="btn btn-sm" onclick="syncDriveNow()" id="btnSyncNow" title="Sync now with Google Drive">🔄 Sync</button>
+                <button class="btn btn-sm" onclick="signOutGoogle()" title="Sign out of Google Drive">Sign out</button>
+            </div>
+
             <button class="btn btn-primary" onclick="openNewNoteModal()">+ Note</button>
         </div>
     </header>
 
     <main>
-        <div class="pairing-banner" id="pairingBanner">
-            <div class="pairing-banner-text">
-                <strong>🔒 Pro Pairing & Cloud Sync</strong>
-                <span>KeepLocate syncs directly with your Google Drive AppData folder. If you purchased KeepLocate on Android, sync pairs automatically.</span>
+        <!-- Dynamic Sync & Pairing Banner -->
+        <div class="sync-banner banner-disconnected" id="syncBanner">
+            <div class="sync-banner-content">
+                <div class="sync-banner-icon" id="bannerIcon">☁️</div>
+                <div class="sync-banner-text">
+                    <h4 id="bannerTitle">Connect Google Drive to Sync Notes</h4>
+                    <p id="bannerDesc">Sign in with the Google Account you use on KeepLocate Android to sync your notes, checklists, and location reminders directly via Google Drive AppData.</p>
+                </div>
             </div>
-            <button class="btn" onclick="alert('Pairing mode: Sign in with your Google account on Android and Web to automatically pair via Google Drive AppData.')">Sync Info</button>
+            <div class="sync-banner-actions" id="bannerActions">
+                <button class="btn btn-google" onclick="initiateGoogleLogin()">
+                    <svg width="16" height="16" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>Sign in with Google</span>
+                </button>
+                <button class="btn" onclick="openFilePicker()">📥 Import Backup JSON</button>
+            </div>
         </div>
+
+        <input type="file" id="backupFileInput" accept=".json,application/json" style="display: none;" onchange="handleFileImport(event)">
 
         <div class="create-bar-wrapper">
             <div class="create-bar" onclick="openNewNoteModal()">
@@ -385,12 +533,18 @@
             
             <div class="modal-actions">
                 <div class="color-palette">
-                    <div class="color-dot" style="background: var(--card-default);" onclick="setCardColor('#ffffff')"></div>
-                    <div class="color-dot" style="background: var(--card-yellow);" onclick="setCardColor('#fff8e1')"></div>
-                    <div class="color-dot" style="background: var(--card-green);" onclick="setCardColor('#e8f5e9')"></div>
-                    <div class="color-dot" style="background: var(--card-blue);" onclick="setCardColor('#e3f2fd')"></div>
-                    <div class="color-dot" style="background: var(--card-pink);" onclick="setCardColor('#fce4ec')"></div>
-                    <div class="color-dot" style="background: var(--card-purple);" onclick="setCardColor('#f3e5f5')"></div>
+                    <div class="color-dot" title="Default" style="background: var(--card-default);" onclick="setCardColor('#ffffff')"></div>
+                    <div class="color-dot" title="Coral" style="background: var(--card-coral);" onclick="setCardColor('#f28b82')"></div>
+                    <div class="color-dot" title="Peach" style="background: var(--card-peach);" onclick="setCardColor('#fbbc04')"></div>
+                    <div class="color-dot" title="Sand" style="background: var(--card-sand);" onclick="setCardColor('#fff475')"></div>
+                    <div class="color-dot" title="Mint" style="background: var(--card-mint);" onclick="setCardColor('#ccff90')"></div>
+                    <div class="color-dot" title="Sage" style="background: var(--card-sage);" onclick="setCardColor('#a7ffeb')"></div>
+                    <div class="color-dot" title="Fog" style="background: var(--card-fog);" onclick="setCardColor('#cbf0f8')"></div>
+                    <div class="color-dot" title="Storm" style="background: var(--card-storm);" onclick="setCardColor('#aecbfa')"></div>
+                    <div class="color-dot" title="Blossom" style="background: var(--card-blossom);" onclick="setCardColor('#d7aefb')"></div>
+                    <div class="color-dot" title="Clay" style="background: var(--card-clay);" onclick="setCardColor('#fdcfe8')"></div>
+                    <div class="color-dot" title="Chalk" style="background: var(--card-chalk);" onclick="setCardColor('#e6c9a8')"></div>
+                    <div class="color-dot" title="Gray" style="background: var(--card-gray);" onclick="setCardColor('#e8eaed')"></div>
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn" onclick="deleteCurrentNote()" id="btnDeleteNote" style="display: none; color: #d93025;">Delete</button>
@@ -400,62 +554,453 @@
         </div>
     </div>
 
+    <!-- Setup / Auth Info Modal -->
+    <div class="modal-overlay" id="authInfoModal">
+        <div class="info-modal">
+            <h3 id="infoModalTitle">Google Cloud Sync Setup</h3>
+            <div id="infoModalBody">
+                <p>KeepLocate syncs directly with your private Google Drive AppData folder so no third-party servers ever touch your notes.</p>
+            </div>
+            <div class="info-modal-actions">
+                <button class="btn" onclick="closeInfoModal()">Close</button>
+                <button class="btn btn-primary" id="infoModalPrimaryAction" onclick="closeInfoModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Default initial notes for web preview
-        const DEFAULT_NOTES = [
-            {
-                id: '1',
-                title: 'Supermarket Groceries',
-                content: '• Organic Almond milk\n• Fresh Sourdough bread\n• Avocados & Cherry tomatoes\n• Greek yogurt',
-                color: '#fff8e1',
-                isPinned: true,
-                location: 'Supermarket (Arrival trigger)',
-                reminder: 'Today, 18:00'
-            },
-            {
-                id: '2',
-                title: 'Office Departure Checklist',
-                content: '• Take laptop charger\n• Lock lab door\n• Turn off meeting room AC',
-                color: '#e8f5e9',
-                isPinned: true,
-                location: 'Office (Departure trigger)',
-                reminder: null
-            },
-            {
-                id: '3',
-                title: 'Car Service & Maintenance',
-                content: 'Check tire pressure and book oil inspection at the garage.',
-                color: '#e3f2fd',
-                isPinned: false,
-                location: 'Auto Garage (150m)',
-                reminder: 'Friday, 10:00'
-            }
-        ];
+        // Google Cloud Configuration
+        const GOOGLE_CLIENT_ID = '964583081853-3s5no5fiuena9k6vfpq7cbot98ndnm6r.apps.googleusercontent.com';
+        const DRIVE_BACKUP_FILE_NAME = 'keeplocate_drive_backup.json';
+
+        // Keep Color ID to Hex mapping matching Android NoteColorPreset
+        const COLOR_MAP = {
+            'default': '#ffffff',
+            'coral': '#f28b82',
+            'peach': '#fbbc04',
+            'sand': '#fff475',
+            'mint': '#ccff90',
+            'sage': '#a7ffeb',
+            'fog': '#cbf0f8',
+            'storm': '#aecbfa',
+            'blossom': '#d7aefb',
+            'clay': '#fdcfe8',
+            'chalk': '#e6c9a8',
+            'gray': '#e8eaed'
+        };
+
+        const WELCOME_NOTE = {
+            id: 'welcome-note',
+            title: 'Welcome to KeepLocate Web 📍',
+            content: 'KeepLocate companion lets you view and edit your notes from any browser.\n\n• To sync your Android notes: Click "Sign in with Google" above.\n• To import an existing backup: Click "Import Backup JSON".\n• Privacy first: Your notes are stored in your private Google Drive AppData folder or local browser storage.',
+            color: '#cbf0f8',
+            isPinned: true,
+            location: null,
+            reminder: null
+        };
 
         let notes = [];
         let currentNoteId = null;
         let selectedColor = '#ffffff';
+        let accessToken = null;
+        let userEmail = null;
+        let driveFileId = null;
+        let tokenClient = null;
 
-        function loadNotes() {
+        // Initialize state on load
+        function initApp() {
+            loadNotesFromLocal();
+            checkSavedSession();
+            initGoogleIdentity();
+        }
+
+        function initGoogleIdentity() {
+            if (window.google && google.accounts && google.accounts.oauth2) {
+                try {
+                    tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: GOOGLE_CLIENT_ID,
+                        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email',
+                        callback: handleTokenResponse,
+                        error_callback: handleTokenError
+                    });
+                } catch (e) {
+                    console.warn('GIS Token client init notice:', e);
+                }
+            } else {
+                setTimeout(initGoogleIdentity, 300);
+            }
+        }
+
+        function initiateGoogleLogin() {
+            if (tokenClient) {
+                updateSyncStatus('syncing', 'Authenticating...');
+                tokenClient.requestAccessToken({ prompt: 'select_account' });
+            } else if (window.google && google.accounts && google.accounts.oauth2) {
+                initGoogleIdentity();
+                if (tokenClient) {
+                    tokenClient.requestAccessToken({ prompt: 'select_account' });
+                }
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'Google Sign-In is initializing. Please wait a moment or check your internet connection.';
+                showInfoModalNode('Connecting to Google', p);
+            }
+        }
+
+        function handleTokenResponse(response) {
+            if (response && response.access_token) {
+                accessToken = response.access_token;
+                sessionStorage.setItem('keeplocate_google_token', accessToken);
+                fetchUserProfileAndDriveFiles();
+            } else {
+                updateSyncStatus('local', 'Local Mode');
+            }
+        }
+
+        function handleTokenError(err) {
+            console.error('Google Auth Error:', err);
+            updateSyncStatus('local', 'Local Mode');
+            
+            if (err && err.type === 'popup_closed_by_user') {
+                return; // User intentionally closed popup
+            }
+
+            const container = document.createElement('div');
+            if (err && (err.type === 'origin_mismatch' || err.message?.includes('origin_mismatch'))) {
+                const p1 = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = 'Google OAuth Origin Configuration:';
+                p1.appendChild(strong);
+
+                const p2 = document.createElement('p');
+                p2.textContent = 'The domain ';
+                const code = document.createElement('code');
+                code.textContent = 'https://keeplocate.dimustech.net';
+                p2.appendChild(code);
+                p2.appendChild(document.createTextNode(' needs to be added as an Authorized JavaScript Origin for Web Client ID in the Google Cloud Console.'));
+
+                const p3 = document.createElement('p');
+                p3.textContent = 'In the meantime, you can use "Import Backup JSON" to load your KeepLocate notes directly into this web app!';
+
+                container.appendChild(p1);
+                container.appendChild(p2);
+                container.appendChild(p3);
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'Could not complete Google Sign-In. You can still use KeepLocate in Local Mode or import your backup JSON.';
+                container.appendChild(p);
+            }
+            showInfoModalNode('Sign-In Information', container);
+        }
+
+        function checkSavedSession() {
+            const savedToken = sessionStorage.getItem('keeplocate_google_token');
+            const savedEmail = sessionStorage.getItem('keeplocate_google_email');
+            if (savedToken) {
+                accessToken = savedToken;
+                userEmail = savedEmail;
+                if (userEmail) {
+                    showConnectedUI(userEmail);
+                }
+                syncDriveNow();
+            } else {
+                showDisconnectedUI();
+            }
+        }
+
+        async function fetchUserProfileAndDriveFiles() {
+            try {
+                updateSyncStatus('syncing', 'Connecting to Drive...');
+                // 1. Fetch user email
+                const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    userEmail = userData.email || 'Google Account';
+                    sessionStorage.setItem('keeplocate_google_email', userEmail);
+                    showConnectedUI(userEmail);
+                }
+
+                // 2. Fetch AppData backup file
+                await syncDriveNow();
+            } catch (e) {
+                console.error('Profile fetch failed:', e);
+                updateSyncStatus('local', 'Local Mode');
+            }
+        }
+
+        async function syncDriveNow() {
+            if (!accessToken) {
+                initiateGoogleLogin();
+                return;
+            }
+
+            try {
+                updateSyncStatus('syncing', 'Syncing Drive...');
+                const listRes = await fetch(
+                    'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)',
+                    { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                );
+
+                if (!listRes.ok) {
+                    if (listRes.status === 401) {
+                        sessionStorage.removeItem('keeplocate_google_token');
+                        accessToken = null;
+                        showDisconnectedUI();
+                        return;
+                    }
+                    throw new Error(`Drive list error: ${listRes.status}`);
+                }
+
+                const listData = await listRes.json();
+                const files = listData.files || [];
+                const backupFile = files.find(f => f.name === DRIVE_BACKUP_FILE_NAME);
+
+                if (backupFile) {
+                    driveFileId = backupFile.id;
+                    // Download remote backup
+                    const fileRes = await fetch(
+                        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+                        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                    );
+                    if (fileRes.ok) {
+                        const jsonText = await fileRes.text();
+                        parseAndApplyBackupJson(jsonText);
+                        updateSyncStatus('connected', 'Synced with Drive');
+                        updateBannerConnected(backupFile.modifiedTime);
+                        return;
+                    }
+                }
+
+                // No remote file yet -> upload local notes as initial backup
+                await uploadNotesToDrive();
+                updateSyncStatus('connected', 'Synced with Drive');
+                updateBannerConnected(new Date().toISOString());
+            } catch (err) {
+                console.error('Drive sync failed:', err);
+                updateSyncStatus('connected', 'Offline / Cached');
+            }
+        }
+
+        async function uploadNotesToDrive() {
+            if (!accessToken) return;
+            try {
+                const payload = buildBackupPayload();
+                const jsonContent = JSON.stringify(payload, null, 2);
+
+                const boundary = '-------KeepLocateBoundary' + Math.random().toString(36).substring(2);
+                const delimiter = '\r\n--' + boundary + '\r\n';
+                const closeDelimiter = '\r\n--' + boundary + '--';
+
+                const metadata = {
+                    name: DRIVE_BACKUP_FILE_NAME,
+                    mimeType: 'application/json',
+                    parents: ['appDataFolder']
+                };
+
+                const multipartBody =
+                    delimiter +
+                    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                    JSON.stringify(metadata) +
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    jsonContent +
+                    closeDelimiter;
+
+                let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+                let method = 'POST';
+
+                if (driveFileId) {
+                    url = `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`;
+                    method = 'PATCH';
+                }
+
+                const uploadRes = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': `multipart/related; boundary=${boundary}`
+                    },
+                    body: multipartBody
+                });
+
+                if (uploadRes.ok) {
+                    const result = await uploadRes.json();
+                    driveFileId = result.id || driveFileId;
+                    console.log('Successfully saved to Google Drive AppData folder');
+                }
+            } catch (e) {
+                console.error('Upload to Drive failed:', e);
+            }
+        }
+
+        function parseAndApplyBackupJson(jsonText) {
+            try {
+                const payload = JSON.parse(jsonText);
+                if (payload && Array.isArray(payload.notes)) {
+                    notes = payload.notes.map((item, index) => {
+                        let hexColor = COLOR_MAP[item.colorId] || item.color || '#ffffff';
+                        let locationStr = null;
+                        if (item.attachedLocations && item.attachedLocations.length > 0) {
+                            locationStr = item.attachedLocations.map(l => l.name).join(', ');
+                        } else if (item.attachedLocationNames && item.attachedLocationNames.length > 0) {
+                            locationStr = item.attachedLocationNames.join(', ');
+                        }
+
+                        let reminderStr = null;
+                        if (item.timeReminderMillis) {
+                            reminderStr = new Date(item.timeReminderMillis).toLocaleString(undefined, {
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                            });
+                        }
+
+                        return {
+                            id: 'note-' + (item.createdAt || Date.now() + index),
+                            title: item.title || '',
+                            content: item.content || '',
+                            color: hexColor,
+                            colorId: item.colorId || 'default',
+                            isPinned: !!item.isPinned,
+                            location: locationStr,
+                            reminder: reminderStr,
+                            checklistItems: item.checklistItems || [],
+                            createdAt: item.createdAt || Date.now(),
+                            updatedAt: item.updatedAt || Date.now()
+                        };
+                    });
+                    saveToLocal();
+                    renderNotes();
+                }
+            } catch (e) {
+                console.error('Failed to parse backup payload', e);
+            }
+        }
+
+        function buildBackupPayload() {
+            return {
+                version: 1,
+                exportedAt: Date.now(),
+                appName: 'KeepLocate',
+                notes: notes.map(n => ({
+                    title: n.title || '',
+                    content: n.content || '',
+                    type: n.checklistItems && n.checklistItems.length > 0 ? 'CHECKLIST' : 'TEXT',
+                    isPinned: !!n.isPinned,
+                    isArchived: false,
+                    isLocked: false,
+                    colorId: n.colorId || 'default',
+                    labels: [],
+                    checklistItems: n.checklistItems || [],
+                    attachedLocationNames: n.location ? [n.location] : [],
+                    attachedLocations: [],
+                    timeReminderMillis: null,
+                    createdAt: n.createdAt || Date.now(),
+                    updatedAt: n.updatedAt || Date.now()
+                })),
+                locationPoints: [],
+                locationGroups: [],
+                customLabels: []
+            };
+        }
+
+        function signOutGoogle() {
+            accessToken = null;
+            userEmail = null;
+            driveFileId = null;
+            sessionStorage.removeItem('keeplocate_google_token');
+            sessionStorage.removeItem('keeplocate_google_email');
+            showDisconnectedUI();
+            updateSyncStatus('local', 'Local Mode');
+        }
+
+        function showConnectedUI(email) {
+            document.getElementById('loggedOutArea').style.display = 'none';
+            document.getElementById('loggedInArea').style.display = 'flex';
+            document.getElementById('userAccountEmail').textContent = email;
+            
+            const banner = document.getElementById('syncBanner');
+            banner.className = 'sync-banner banner-connected';
+            document.getElementById('bannerIcon').textContent = '🟢';
+            document.getElementById('bannerTitle').textContent = 'Connected to Google Drive';
+            document.getElementById('bannerDesc').textContent = `Syncing directly with your private Google Drive AppData folder (${email}).`;
+            
+            const actions = document.getElementById('bannerActions');
+            actions.replaceChildren();
+            
+            const syncBtn = document.createElement('button');
+            syncBtn.className = 'btn btn-primary';
+            syncBtn.textContent = '🔄 Sync Now';
+            syncBtn.onclick = syncDriveNow;
+
+            const importBtn = document.createElement('button');
+            importBtn.className = 'btn';
+            importBtn.textContent = '📥 Import JSON';
+            importBtn.onclick = openFilePicker;
+
+            actions.appendChild(syncBtn);
+            actions.appendChild(importBtn);
+        }
+
+        function showDisconnectedUI() {
+            document.getElementById('loggedOutArea').style.display = 'flex';
+            document.getElementById('loggedInArea').style.display = 'none';
+            
+            const banner = document.getElementById('syncBanner');
+            banner.className = 'sync-banner banner-disconnected';
+            document.getElementById('bannerIcon').textContent = '☁️';
+            document.getElementById('bannerTitle').textContent = 'Connect Google Drive to Sync Notes';
+            document.getElementById('bannerDesc').textContent = 'Sign in with the Google Account you use on KeepLocate Android to sync your notes, checklists, and location reminders directly via Google Drive AppData.';
+            
+            const actions = document.getElementById('bannerActions');
+            actions.replaceChildren();
+
+            const googleBtn = document.getElementById('btnLoginHeader').cloneNode(true);
+            googleBtn.onclick = initiateGoogleLogin;
+
+            const importBtn = document.createElement('button');
+            importBtn.className = 'btn';
+            importBtn.textContent = '📥 Import Backup JSON';
+            importBtn.onclick = openFilePicker;
+
+            actions.appendChild(googleBtn);
+            actions.appendChild(importBtn);
+        }
+
+        function updateSyncStatus(state, label) {
+            const pill = document.getElementById('syncStatus');
+            const text = document.getElementById('syncText');
+            pill.className = 'status-pill status-' + state;
+            text.textContent = label;
+        }
+
+        function updateBannerConnected(modifiedIso) {
+            const timeStr = modifiedIso ? new Date(modifiedIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+            document.getElementById('bannerDesc').textContent = `Connected to ${userEmail}. Syncing automatically with private Google Drive AppData folder. (Last synced: ${timeStr})`;
+        }
+
+        // Local Storage Handling
+        function loadNotesFromLocal() {
             const saved = localStorage.getItem('keeplocate_web_notes');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    notes = Array.isArray(parsed) ? parsed.filter(n => n && typeof n === 'object') : DEFAULT_NOTES;
+                    notes = Array.isArray(parsed) ? parsed.filter(n => n && typeof n === 'object') : [WELCOME_NOTE];
                 } catch (e) {
-                    notes = DEFAULT_NOTES;
+                    notes = [WELCOME_NOTE];
                 }
             } else {
-                notes = DEFAULT_NOTES;
-                saveToStorage();
+                notes = [WELCOME_NOTE];
+                saveToLocal();
             }
             renderNotes();
         }
 
-        function saveToStorage() {
+        function saveToLocal() {
             localStorage.setItem('keeplocate_web_notes', JSON.stringify(notes));
         }
 
+        // Notes Rendering (Safe DOM APIs - Zero XSS)
         function renderNotes() {
             const query = (document.getElementById('searchInput').value || '').toLowerCase();
             const filtered = notes.filter(n => 
@@ -478,33 +1023,34 @@
             if (pinned.length > 0) {
                 pinnedSec.style.display = 'block';
                 othersTitle.style.display = others.length > 0 ? 'block' : 'none';
-                pinned.forEach(n => pinnedGrid.appendChild(createNoteElement(n)));
+                pinned.forEach(n => pinnedGrid.appendChild(createNoteCard(n)));
             } else {
                 pinnedSec.style.display = 'none';
                 othersTitle.style.display = 'none';
             }
 
-            others.forEach(n => notesGrid.appendChild(createNoteElement(n)));
+            others.forEach(n => notesGrid.appendChild(createNoteCard(n)));
         }
 
-        function createNoteElement(n) {
-            const el = document.createElement('div');
-            el.className = 'note-card';
-            el.style.backgroundColor = n.color || '#ffffff';
-            el.onclick = (e) => {
+        function createNoteCard(n) {
+            const card = document.createElement('div');
+            card.className = 'note-card';
+            card.style.backgroundColor = n.color || '#ffffff';
+            card.onclick = (e) => {
                 if (e.target.classList.contains('pin-btn')) return;
                 openEditNoteModal(n.id);
             };
 
             const pinBtn = document.createElement('button');
             pinBtn.className = 'pin-btn' + (n.isPinned ? ' pinned' : '');
-            pinBtn.innerText = n.isPinned ? '📌' : '📍';
-            pinBtn.title = n.isPinned ? 'Unpin' : 'Pin to top';
+            pinBtn.textContent = n.isPinned ? '📌' : '📍';
+            pinBtn.title = n.isPinned ? 'Unpin note' : 'Pin note to top';
             pinBtn.onclick = (e) => {
                 e.stopPropagation();
                 n.isPinned = !n.isPinned;
-                saveToStorage();
+                saveToLocal();
                 renderNotes();
+                if (accessToken) uploadNotesToDrive();
             };
 
             const title = document.createElement('h3');
@@ -513,9 +1059,9 @@
             const content = document.createElement('p');
             content.textContent = n.content || '';
 
-            el.appendChild(pinBtn);
-            el.appendChild(title);
-            el.appendChild(content);
+            card.appendChild(pinBtn);
+            card.appendChild(title);
+            card.appendChild(content);
 
             if (n.location || n.reminder) {
                 const chips = document.createElement('div');
@@ -532,12 +1078,13 @@
                     rem.textContent = '⏰ ' + n.reminder;
                     chips.appendChild(rem);
                 }
-                el.appendChild(chips);
+                card.appendChild(chips);
             }
 
-            return el;
+            return card;
         }
 
+        // Modal Note Operations
         function openNewNoteModal() {
             currentNoteId = null;
             document.getElementById('modalTitle').value = '';
@@ -581,27 +1128,32 @@
                     note.title = title;
                     note.content = content;
                     note.color = selectedColor;
+                    note.updatedAt = Date.now();
                 }
             } else {
                 notes.unshift({
-                    id: Date.now().toString(),
+                    id: 'note-' + Date.now(),
                     title: title,
                     content: content,
                     color: selectedColor,
-                    isPinned: false
+                    isPinned: false,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
                 });
             }
 
-            saveToStorage();
+            saveToLocal();
             renderNotes();
             closeModal();
+            if (accessToken) uploadNotesToDrive();
         }
 
         function deleteCurrentNote() {
             if (currentNoteId) {
                 notes = notes.filter(n => n.id !== currentNoteId);
-                saveToStorage();
+                saveToLocal();
                 renderNotes();
+                if (accessToken) uploadNotesToDrive();
             }
             closeModal();
         }
@@ -616,8 +1168,42 @@
             }
         }
 
+        // File Import Handling
+        function openFilePicker() {
+            document.getElementById('backupFileInput').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                parseAndApplyBackupJson(content);
+                const p = document.createElement('p');
+                p.textContent = 'Successfully imported notes from ' + file.name + '. You can now view and edit them in KeepLocate Web.';
+                showInfoModalNode('Backup Imported', p);
+                if (accessToken) uploadNotesToDrive();
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Informational Modal
+        function showInfoModalNode(title, contentNode) {
+            document.getElementById('infoModalTitle').textContent = title;
+            const body = document.getElementById('infoModalBody');
+            body.replaceChildren(contentNode);
+            document.getElementById('authInfoModal').classList.add('open');
+        }
+
+        function closeInfoModal() {
+            document.getElementById('authInfoModal').classList.remove('open');
+        }
+
         document.getElementById('searchInput').addEventListener('input', renderNotes);
-        window.addEventListener('DOMContentLoaded', loadNotes);
+        window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
