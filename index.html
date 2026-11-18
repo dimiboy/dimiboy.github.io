@@ -3,53 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>KeepLocate - Smart Location & Time Reminders for Notes</title>
     <meta name="google-site-verification" content="i-krhf8oKsNY0joJqYou9m9zvtits0zPH8v0zTOAdAs" />
-    <meta name="description" content="KeepLocate is a smart note-taking and task reminder app for Android featuring location-based geofence triggers, exact time reminders, and two-way Google Tasks synchronization.">
-    <meta name="keywords" content="Google Keep alternative, location reminder, geofence notes, multi location reminder, google tasks sync, android checklist, keep clone">
-    <link rel="canonical" href="https://keeplocate.dimustech.net/">
-    <meta name="google-play-app" content="app-id=com.keeplocate.app">
-
-    <!-- Open Graph / Facebook / Telegram -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://keeplocate.dimustech.net/">
-    <meta property="og:title" content="KeepLocate - Smart Multi-Location Geofence Reminders & Notes">
-    <meta property="og:description" content="Offline-first Google Keep alternative with multi-location geofencing, checklist notifications, and 2-way Google Tasks sync.">
-    <meta property="og:image" content="https://keeplocate.dimustech.net/icon.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://keeplocate.dimustech.net/">
-    <meta property="twitter:title" content="KeepLocate - Smart Multi-Location Geofence Reminders & Notes">
-    <meta property="twitter:description" content="Offline-first Google Keep alternative with multi-location geofencing, checklist notifications, and 2-way Google Tasks sync.">
-
-    <!-- Schema.org Application Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "KeepLocate",
-      "operatingSystem": "Android",
-      "applicationCategory": "ProductivityApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "description": "Smart note-taking and checklist app for Android featuring multi-location geofence reminders, exact time alarms, and two-way Google Tasks synchronization.",
-      "url": "https://keeplocate.dimustech.net/",
-      "downloadUrl": "https://play.google.com/store/apps/details?id=com.keeplocate.app"
-    }
-    </script>
+    <meta name="description" content="KeepLocate is a smart note-taking and task reminder app featuring location-based geofence triggers (arrival & departure), exact alarms, Google Tasks 2-way sync, and cross-platform web access.">
     <style>
         :root {
             --primary: #4285F4;
             --primary-dark: #3367D6;
+            --accent: #0F9D58;
+            --accent-dark: #0B8043;
             --surface: #ffffff;
             --background: #f8f9fa;
             --text-primary: #202124;
             --text-secondary: #5f6368;
             --border: #dadce0;
+        }
+        * {
+            box-sizing: border-box;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -62,67 +35,132 @@
         header {
             background-color: var(--surface);
             border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
+            padding: 1.25rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .logo-area {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.4rem;
+            gap: 10px;
+            font-size: 1.35rem;
             font-weight: 700;
             color: var(--primary-dark);
+            text-decoration: none;
         }
         .logo-icon {
-            font-size: 1.8rem;
+            font-size: 1.7rem;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
         }
         nav a {
-            margin-left: 1.5rem;
             text-decoration: none;
             color: var(--text-secondary);
             font-weight: 500;
+            transition: color 0.15s;
         }
         nav a:hover {
             color: var(--primary);
         }
+        nav a.nav-app-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        nav a.nav-app-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
         .hero {
             text-align: center;
-            padding: 4rem 1.5rem 3rem;
-            max-width: 800px;
+            padding: 4.5rem 1.5rem 3.5rem;
+            max-width: 860px;
             margin: 0 auto;
         }
+        .hero-badge {
+            display: inline-block;
+            background: #E8F0FE;
+            color: var(--primary-dark);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
         .hero h1 {
-            font-size: 2.8rem;
-            margin-bottom: 1rem;
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 1.25rem;
             color: #1a73e8;
+            letter-spacing: -0.5px;
         }
         .hero p {
             font-size: 1.25rem;
             color: var(--text-secondary);
-            margin-bottom: 2rem;
+            margin-bottom: 2.25rem;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
         }
         .cta-button {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background-color: var(--primary);
             color: white;
-            padding: 0.85rem 2rem;
+            padding: 0.85rem 1.75rem;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 1.1rem;
-            transition: background-color 0.2s;
+            font-size: 1.05rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(66, 133, 244, 0.25);
         }
         .cta-button:hover {
             background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+        }
+        .cta-button-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--surface);
+            color: var(--text-primary);
+            padding: 0.85rem 1.75rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .cta-button-secondary:hover {
+            background-color: #f1f3f4;
+            border-color: #c0c4c9;
+            transform: translateY(-1px);
         }
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            max-width: 1000px;
-            margin: 2rem auto 4rem;
+            max-width: 1080px;
+            margin: 1.5rem auto 4.5rem;
             padding: 0 1.5rem;
         }
         .feature-card {
@@ -130,16 +168,31 @@
             padding: 1.75rem;
             border-radius: 12px;
             border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .feature-card h3 {
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .feature-card h2 {
+            font-size: 1.25rem;
             margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
             color: #1a73e8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feature-card p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.98rem;
         }
         footer {
             background-color: var(--surface);
             border-top: 1px solid var(--border);
-            padding: 2rem;
+            padding: 2.5rem 1.5rem;
             text-align: center;
             color: var(--text-secondary);
             font-size: 0.95rem;
@@ -152,48 +205,80 @@
         footer a:hover {
             text-decoration: underline;
         }
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .hero p {
+                font-size: 1.1rem;
+            }
+            header {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo-area">
+        <a href="index.html" class="logo-area">
             <span class="logo-icon">📍</span>
             <span>KeepLocate</span>
-        </div>
+        </a>
         <nav>
             <a href="index.html">Home</a>
-            <a href="/coupons" style="color: #1a73e8; font-weight: 600;">🎁 Free Promo Codes</a>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms of Service</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <a href="app/" class="nav-app-btn">Launch App</a>
         </nav>
     </header>
 
     <main>
         <section class="hero">
-            <h1>Never Forget When You Arrive</h1>
-            <p>KeepLocate combines intuitive Google Keep-style note organization with smart GPS geofencing and two-way Google Tasks synchronization.</p>
-            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                <a class="cta-button" href="https://play.google.com/store/apps/details?id=com.keeplocate.app" target="_blank">Get KeepLocate on Google Play</a>
-                <a class="cta-button" href="/coupons" style="background-color: #34a853;">🎁 Claim Free Promo Code</a>
+            <div class="hero-badge">Smart Location & Task Companion</div>
+            <h1>Never Forget When You Arrive or Depart</h1>
+            <p>KeepLocate combines intuitive Google Keep-style note organization with smart GPS geofencing, arrival & departure alerts, exact alarms, and two-way Google Tasks sync.</p>
+            <div class="hero-actions">
+                <a class="cta-button" href="https://play.google.com/store/apps/details?id=com.keeplocate.app" target="_blank" rel="noopener noreferrer">
+                    <span>▶</span> Get on Google Play
+                </a>
+                <a class="cta-button-secondary" href="app/">
+                    <span>💻</span> Launch Web App
+                </a>
             </div>
         </section>
 
         <section class="features">
             <div class="feature-card">
-                <h2>📍 Geofenced Reminders</h2>
-                <p>Attach locations to any note or checklist. Get notified automatically when you arrive at or leave your favorite supermarket, office, or hardware store.</p>
+                <h2>📍 Arrival & Departure Geofences</h2>
+                <p>Attach locations to any note or checklist. Trigger instant reminders both when arriving at or leaving your supermarket, workplace, school, or pharmacy.</p>
             </div>
             <div class="feature-card">
                 <h2>🔄 Google Tasks 2-Way Sync</h2>
-                <p>Seamlessly sync your checklists and notes with Google Tasks and Google Calendar. Check off items anywhere, and they update instantly.</p>
+                <p>Sync notes and checklists seamlessly with your Google Tasks account. Complete items on any device, and changes synchronize automatically in both directions.</p>
             </div>
             <div class="feature-card">
-                <h2>🔒 Biometric Lock & Privacy First</h2>
-                <p>All notes and coordinates are stored securely on your local device. Protect sensitive notes with fingerprint or face biometric authentication.</p>
+                <h2>🌐 Web App & Cross-Platform Access</h2>
+                <p>Open and manage your notes from any browser. View your checklists on your computer, tablet, or phone without installing extra software.</p>
             </div>
             <div class="feature-card">
-                <h2>⏰ Exact Alarms & Snooze</h2>
-                <p>Schedule exact time alarms, snooze notifications for later, or repeat reminders based on specific days of the week.</p>
+                <h2>📱 Home Screen Widgets</h2>
+                <p>Pin quick-access note cards and interactive checklists right onto your Android home screen with the resizable Single Note Widget.</p>
+            </div>
+            <div class="feature-card">
+                <h2>🔒 Biometric Security & Local Privacy</h2>
+                <p>Keep sensitive notes confidential with fingerprint and face biometric protection. Notes and GPS coordinates remain strictly on your local device or personal cloud.</p>
+            </div>
+            <div class="feature-card">
+                <h2>⏰ Exact Alarms & Periodic Reminders</h2>
+                <p>Schedule high-precision notifications with one-tap snooze, daily repeats, and periodic alarms tailored to your routine.</p>
+            </div>
+            <div class="feature-card">
+                <h2>🔗 Smart Links & Auto-RTL</h2>
+                <p>Clickable URLs, phone numbers, and addresses detected automatically, with seamless Right-to-Left (Hebrew, Arabic) text formatting.</p>
+            </div>
+            <div class="feature-card">
+                <h2>💾 JSON Data Backup & Restore</h2>
+                <p>Export your complete notebook into structured JSON at any time. Move your data effortlessly with zero vendor lock-in.</p>
             </div>
         </section>
     </main>
@@ -203,7 +288,8 @@
         <p>
             <a href="privacy.html">Privacy Policy</a> | 
             <a href="terms.html">Terms of Service</a> | 
-            <a href="https://github.com/dimiboy/google-keep-location-reminder" target="_blank">GitHub Repository</a>
+            <a href="app/">Web App</a> |
+            <a href="https://github.com/dimiboy/google-keep-location-reminder" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
         </p>
         <p>Contact: <a href="mailto:dimiboy@gmail.com">dimiboy@gmail.com</a></p>
     </footer>

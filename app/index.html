@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googleapis.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>KeepLocate Web App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+    <style>
+        :root {
+            --primary: #4285F4;
+            --primary-dark: #3367D6;
+            --surface: #ffffff;
+            --background: #f1f3f4;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --card-default: #ffffff;
+            --card-yellow: #fff8e1;
+            --card-green: #e8f5e9;
+            --card-blue: #e3f2fd;
+            --card-pink: #fce4ec;
+            --card-purple: #f3e5f5;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .header-search {
+            flex: 1;
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+            background: #f1f3f4;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+        .header-search:focus-within {
+            background: #ffffff;
+            border-color: var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .header-search input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-primary);
+            transition: all 0.15s;
+        }
+        .btn:hover {
+            background: #f8f9fa;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        .status-pill {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            background: #e6f4ea;
+            color: #137333;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-pill.unpaired {
+            background: #fef7e0;
+            color: #b06000;
+        }
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        .create-bar-wrapper {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        .create-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .create-bar:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin: 1.5rem 0 0.75rem;
+        }
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .note-card {
+            background: var(--card-default);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: box-shadow 0.15s, transform 0.15s;
+            cursor: pointer;
+            position: relative;
+        }
+        .note-card:hover {
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        .note-card .pin-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.4;
+            transition: opacity 0.15s;
+        }
+        .note-card:hover .pin-btn, .note-card .pin-btn.pinned {
+            opacity: 1;
+        }
+        .note-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding-right: 24px;
+        }
+        .note-card p {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.92rem;
+        }
+        .checklist-item.done {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+        .note-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 0.5rem;
+        }
+        .chip {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.06);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+        .chip-location {
+            background: #e8f0fe;
+            color: var(--primary-dark);
+        }
+        .chip-reminder {
+            background: #fef7e0;
+            color: #b06000;
+        }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-card {
+            background: var(--surface);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 540px;
+            padding: 1.25rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .modal-card input, .modal-card textarea {
+            border: none;
+            outline: none;
+            font-family: inherit;
+            width: 100%;
+            background: transparent;
+        }
+        .modal-card input.title-input {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-card textarea.content-input {
+            font-size: 1rem;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .color-palette {
+            display: flex;
+            gap: 6px;
+        }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+        /* Pairing dialog */
+        .pairing-banner {
+            background: #e8f0fe;
+            border: 1px solid #c2e7ff;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .pairing-banner-text {
+            font-size: 0.92rem;
+            color: #001d35;
+        }
+        .pairing-banner-text strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        @media (max-width: 600px) {
+            header {
+                padding: 0.5rem 1rem;
+            }
+            .header-search {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../index.html" class="header-left">
+            <span>📍</span>
+            <span>KeepLocate</span>
+        </a>
+        <div class="header-search">
+            <span>🔍</span>
+            <input type="text" id="searchInput" placeholder="Search notes and locations...">
+        </div>
+        <div class="header-right">
+            <div id="syncStatus" class="status-pill">
+                <span>🔄</span>
+                <span id="syncText">Sync Active</span>
+            </div>
+            <button class="btn btn-primary" onclick="openNewNoteModal()">+ Note</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="pairing-banner" id="pairingBanner">
+            <div class="pairing-banner-text">
+                <strong>🔒 Pro Pairing & Cloud Sync</strong>
+                <span>KeepLocate syncs directly with your Google Drive AppData folder. If you purchased KeepLocate on Android, sync pairs automatically.</span>
+            </div>
+            <button class="btn" onclick="alert('Pairing mode: Sign in with your Google account on Android and Web to automatically pair via Google Drive AppData.')">Sync Info</button>
+        </div>
+
+        <div class="create-bar-wrapper">
+            <div class="create-bar" onclick="openNewNoteModal()">
+                <span>Take a note or checklist...</span>
+                <span>✏️</span>
+            </div>
+        </div>
+
+        <div id="pinnedSection" style="display: none;">
+            <div class="section-title">Pinned</div>
+            <div class="notes-grid" id="pinnedNotesGrid"></div>
+        </div>
+
+        <div class="section-title" id="othersTitle" style="display: none;">Others</div>
+        <div class="notes-grid" id="notesGrid"></div>
+    </main>
+
+    <!-- Note Edit / Create Modal -->
+    <div class="modal-overlay" id="noteModal" onclick="handleOverlayClick(event)">
+        <div class="modal-card" id="modalCard">
+            <input type="text" id="modalTitle" class="title-input" placeholder="Title">
+            <textarea id="modalContent" class="content-input" placeholder="Take a note..."></textarea>
+            
+            <div class="modal-actions">
+                <div class="color-palette">
+                    <div class="color-dot" style="background: var(--card-default);" onclick="setCardColor('#ffffff')"></div>
+                    <div class="color-dot" style="background: var(--card-yellow);" onclick="setCardColor('#fff8e1')"></div>
+                    <div class="color-dot" style="background: var(--card-green);" onclick="setCardColor('#e8f5e9')"></div>
+                    <div class="color-dot" style="background: var(--card-blue);" onclick="setCardColor('#e3f2fd')"></div>
+                    <div class="color-dot" style="background: var(--card-pink);" onclick="setCardColor('#fce4ec')"></div>
+                    <div class="color-dot" style="background: var(--card-purple);" onclick="setCardColor('#f3e5f5')"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" onclick="deleteCurrentNote()" id="btnDeleteNote" style="display: none; color: #d93025;">Delete</button>
+                    <button class="btn btn-primary" onclick="saveNote()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default initial notes for web preview
+        const DEFAULT_NOTES = [
+            {
+                id: '1',
+                title: 'Supermarket Groceries',
+                content: '• Organic Almond milk\n• Fresh Sourdough bread\n• Avocados & Cherry tomatoes\n• Greek yogurt',
+                color: '#fff8e1',
+                isPinned: true,
+                location: 'Supermarket (Arrival trigger)',
+                reminder: 'Today, 18:00'
+            },
+            {
+                id: '2',
+                title: 'Office Departure Checklist',
+                content: '• Take laptop charger\n• Lock lab door\n• Turn off meeting room AC',
+                color: '#e8f5e9',
+                isPinned: true,
+                location: 'Office (Departure trigger)',
+                reminder: null
+            },
+            {
+                id: '3',
+                title: 'Car Service & Maintenance',
+                content: 'Check tire pressure and book oil inspection at the garage.',
+                color: '#e3f2fd',
+                isPinned: false,
+                location: 'Auto Garage (150m)',
+                reminder: 'Friday, 10:00'
+            }
+        ];
+
+        let notes = [];
+        let currentNoteId = null;
+        let selectedColor = '#ffffff';
+
+        function loadNotes() {
+            const saved = localStorage.getItem('keeplocate_web_notes');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    notes = Array.isArray(parsed) ? parsed.filter(n => n && typeof n === 'object') : DEFAULT_NOTES;
+                } catch (e) {
+                    notes = DEFAULT_NOTES;
+                }
+            } else {
+                notes = DEFAULT_NOTES;
+                saveToStorage();
+            }
+            renderNotes();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('keeplocate_web_notes', JSON.stringify(notes));
+        }
+
+        function renderNotes() {
+            const query = (document.getElementById('searchInput').value || '').toLowerCase();
+            const filtered = notes.filter(n => 
+                (n.title && n.title.toLowerCase().includes(query)) ||
+                (n.content && n.content.toLowerCase().includes(query)) ||
+                (n.location && n.location.toLowerCase().includes(query))
+            );
+
+            const pinned = filtered.filter(n => n.isPinned);
+            const others = filtered.filter(n => !n.isPinned);
+
+            const pinnedSec = document.getElementById('pinnedSection');
+            const pinnedGrid = document.getElementById('pinnedNotesGrid');
+            const othersTitle = document.getElementById('othersTitle');
+            const notesGrid = document.getElementById('notesGrid');
+
+            pinnedGrid.replaceChildren();
+            notesGrid.replaceChildren();
+
+            if (pinned.length > 0) {
+                pinnedSec.style.display = 'block';
+                othersTitle.style.display = others.length > 0 ? 'block' : 'none';
+                pinned.forEach(n => pinnedGrid.appendChild(createNoteElement(n)));
+            } else {
+                pinnedSec.style.display = 'none';
+                othersTitle.style.display = 'none';
+            }
+
+            others.forEach(n => notesGrid.appendChild(createNoteElement(n)));
+        }
+
+        function createNoteElement(n) {
+            const el = document.createElement('div');
+            el.className = 'note-card';
+            el.style.backgroundColor = n.color || '#ffffff';
+            el.onclick = (e) => {
+                if (e.target.classList.contains('pin-btn')) return;
+                openEditNoteModal(n.id);
+            };
+
+            const pinBtn = document.createElement('button');
+            pinBtn.className = 'pin-btn' + (n.isPinned ? ' pinned' : '');
+            pinBtn.innerText = n.isPinned ? '📌' : '📍';
+            pinBtn.title = n.isPinned ? 'Unpin' : 'Pin to top';
+            pinBtn.onclick = (e) => {
+                e.stopPropagation();
+                n.isPinned = !n.isPinned;
+                saveToStorage();
+                renderNotes();
+            };
+
+            const title = document.createElement('h3');
+            title.textContent = n.title || 'Untitled';
+
+            const content = document.createElement('p');
+            content.textContent = n.content || '';
+
+            el.appendChild(pinBtn);
+            el.appendChild(title);
+            el.appendChild(content);
+
+            if (n.location || n.reminder) {
+                const chips = document.createElement('div');
+                chips.className = 'note-chips';
+                if (n.location) {
+                    const loc = document.createElement('span');
+                    loc.className = 'chip chip-location';
+                    loc.textContent = '📍 ' + n.location;
+                    chips.appendChild(loc);
+                }
+                if (n.reminder) {
+                    const rem = document.createElement('span');
+                    rem.className = 'chip chip-reminder';
+                    rem.textContent = '⏰ ' + n.reminder;
+                    chips.appendChild(rem);
+                }
+                el.appendChild(chips);
+            }
+
+            return el;
+        }
+
+        function openNewNoteModal() {
+            currentNoteId = null;
+            document.getElementById('modalTitle').value = '';
+            document.getElementById('modalContent').value = '';
+            selectedColor = '#ffffff';
+            document.getElementById('modalCard').style.backgroundColor = selectedColor;
+            document.getElementById('btnDeleteNote').style.display = 'none';
+            document.getElementById('noteModal').classList.add('open');
+            document.getElementById('modalTitle').focus();
+        }
+
+        function openEditNoteModal(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            currentNoteId = id;
+            document.getElementById('modalTitle').value = note.title || '';
+            document.getElementById('modalContent').value = note.content || '';
+            selectedColor = note.color || '#ffffff';
+            document.getElementById('modalCard').style.backgroundColor = selectedColor;
+            document.getElementById('btnDeleteNote').style.display = 'inline-block';
+            document.getElementById('noteModal').classList.add('open');
+        }
+
+        function setCardColor(color) {
+            selectedColor = color;
+            document.getElementById('modalCard').style.backgroundColor = color;
+        }
+
+        function saveNote() {
+            const title = document.getElementById('modalTitle').value.trim();
+            const content = document.getElementById('modalContent').value.trim();
+
+            if (!title && !content) {
+                closeModal();
+                return;
+            }
+
+            if (currentNoteId) {
+                const note = notes.find(n => n.id === currentNoteId);
+                if (note) {
+                    note.title = title;
+                    note.content = content;
+                    note.color = selectedColor;
+                }
+            } else {
+                notes.unshift({
+                    id: Date.now().toString(),
+                    title: title,
+                    content: content,
+                    color: selectedColor,
+                    isPinned: false
+                });
+            }
+
+            saveToStorage();
+            renderNotes();
+            closeModal();
+        }
+
+        function deleteCurrentNote() {
+            if (currentNoteId) {
+                notes = notes.filter(n => n.id !== currentNoteId);
+                saveToStorage();
+                renderNotes();
+            }
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('noteModal').classList.remove('open');
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target.id === 'noteModal') {
+                saveNote();
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderNotes);
+        window.addEventListener('DOMContentLoaded', loadNotes);
+    </script>
+</body>
+</html>
