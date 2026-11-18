@@ -1338,7 +1338,8 @@
                         const isDeleted = deletedNotes.some(del => {
                             const matchCreated = del.createdAt && n.createdAt && Math.abs(del.createdAt - n.createdAt) < 5000;
                             const matchTitle = del.title && n.title && del.title.trim().toLowerCase() === n.title.trim().toLowerCase();
-                            return (matchCreated || matchTitle) && (del.deletedAt >= n.updatedAt);
+                            const matchContent = del.content && n.content && n.content.trim().startsWith(del.content.trim().slice(0, 50));
+                            return (matchCreated || matchTitle || matchContent) && (del.deletedAt >= n.updatedAt);
                         });
                         return !isDeleted;
                     });
@@ -1398,6 +1399,7 @@
                 customLabels: allLabels,
                 deletedNotes: deletedNotes.map(d => ({
                     title: d.title || '',
+                    content: d.content || '',
                     createdAt: d.createdAt || 0,
                     deletedAt: d.deletedAt || Date.now()
                 }))
@@ -1438,8 +1440,15 @@
             importBtn.textContent = '📥 Import JSON';
             importBtn.onclick = openFilePicker;
 
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'btn';
+            exportBtn.textContent = '💾 View / Export JSON';
+            exportBtn.title = 'Download raw Drive JSON backup to inspect notes';
+            exportBtn.onclick = exportBackupJson;
+
             actions.appendChild(syncBtn);
             actions.appendChild(importBtn);
+            actions.appendChild(exportBtn);
         }
 
         function showDisconnectedUI() {
@@ -1463,8 +1472,28 @@
             importBtn.textContent = '📥 Import Backup JSON';
             importBtn.onclick = openFilePicker;
 
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'btn';
+            exportBtn.textContent = '💾 View / Export JSON';
+            exportBtn.title = 'Download raw Drive JSON backup to inspect notes';
+            exportBtn.onclick = exportBackupJson;
+
             actions.appendChild(googleBtn);
             actions.appendChild(importBtn);
+            actions.appendChild(exportBtn);
+        }
+
+        function exportBackupJson() {
+            const payload = buildBackupPayload();
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `keeplocate_drive_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function updateSyncStatus(state, label) {
@@ -1712,6 +1741,16 @@
                 if (accessToken) debouncedUploadToDrive(1000);
             };
             actionsWrap.appendChild(archiveBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'card-action-btn';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.title = 'Delete note';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteNoteById(n.id);
+            };
+            actionsWrap.appendChild(deleteBtn);
             card.appendChild(actionsWrap);
 
             if (n.title && n.title.trim()) {
@@ -2428,22 +2467,29 @@
         }
 
         // Soft-delete with tombstone recording
+        function deleteNoteById(id) {
+            if (!id) return;
+            const noteToDelete = notes.find(n => n.id === id);
+            if (noteToDelete) {
+                deletedNotes.push({
+                    title: noteToDelete.title || '',
+                    content: (noteToDelete.content || '').substring(0, 100),
+                    createdAt: noteToDelete.createdAt || 0,
+                    deletedAt: Date.now()
+                });
+                saveDeletedNotesToLocal();
+            }
+            notes = notes.filter(n => n.id !== id);
+            saveToLocal();
+            updateCounts();
+            renderLabelsFilterBar();
+            renderNotes();
+            if (accessToken) uploadNotesToDrive();
+        }
+
         function deleteCurrentNote() {
             if (currentNoteId) {
-                const noteToDelete = notes.find(n => n.id === currentNoteId);
-                if (noteToDelete) {
-                    deletedNotes.push({
-                        title: noteToDelete.title || '',
-                        createdAt: noteToDelete.createdAt || 0,
-                        deletedAt: Date.now()
-                    });
-                    saveDeletedNotesToLocal();
-                }
-                notes = notes.filter(n => n.id !== currentNoteId);
-                saveToLocal();
-                renderLabelsFilterBar();
-                renderNotes();
-                if (accessToken) uploadNotesToDrive();
+                deleteNoteById(currentNoteId);
             }
             closeModal();
         }
