@@ -966,6 +966,7 @@
         let backupLocationPoints = [];
         let backupLocationGroups = [];
         let backupCustomLabels = [];
+        let backupUserSettings = null;
 
         // Temporary editing state for currently open modal
         let modalDraftLabels = [];
@@ -1273,6 +1274,7 @@
                     backupLocationPoints = Array.isArray(payload.locationPoints) ? payload.locationPoints : [];
                     backupLocationGroups = Array.isArray(payload.locationGroups) ? payload.locationGroups : [];
                     backupCustomLabels = Array.isArray(payload.customLabels) ? payload.customLabels : [];
+                    backupUserSettings = payload.userSettings || backupUserSettings || null;
                     
                     // Merge remote deletedNotes tombstones
                     if (Array.isArray(payload.deletedNotes)) {
@@ -1319,14 +1321,26 @@
                             type: item.type || (cleanItems.length > 0 ? 'CHECKLIST' : 'TEXT'),
                             color: hexColor,
                             colorId: item.colorId || 'default',
-                            isPinned: !!item.isPinned,
+                            isPinned: !item.isArchived && !!item.isPinned,
                             isArchived: !!item.isArchived,
+                            isLocked: !!item.isLocked,
                             labels: rawLabels,
                             location: locationStr,
                             reminder: reminderStr,
                             rawAttachedLocations: item.attachedLocations || [],
                             rawAttachedLocationNames: item.attachedLocationNames || [],
+                            attachedLocationGroupName: item.attachedLocationGroupName || null,
+                            images: Array.isArray(item.images) ? item.images : [],
+                            audioRecordings: Array.isArray(item.audioRecordings) ? item.audioRecordings : [],
                             timeReminderMillis: item.timeReminderMillis || null,
+                            timeWindowStartHour: item.timeWindowStartHour || null,
+                            timeWindowStartMinute: item.timeWindowStartMinute || null,
+                            timeWindowEndHour: item.timeWindowEndHour || null,
+                            timeWindowEndMinute: item.timeWindowEndMinute || null,
+                            timeWindowDaysOfWeek: Array.isArray(item.timeWindowDaysOfWeek) ? item.timeWindowDaysOfWeek : [],
+                            snoozeUntilMillis: item.snoozeUntilMillis || null,
+                            isFullScreenReminder: item.isFullScreenReminder,
+                            repeatInterval: item.repeatInterval || 'DOES_NOT_REPEAT',
                             checklistItems: cleanItems,
                             createdAt: item.createdAt || Date.now(),
                             updatedAt: item.updatedAt || Date.now()
@@ -1381,7 +1395,7 @@
                         type: isList ? 'CHECKLIST' : 'TEXT',
                         isPinned: !n.isArchived && !!n.isPinned,
                         isArchived: !!n.isArchived,
-                        isLocked: false,
+                        isLocked: !!n.isLocked,
                         colorId: n.colorId || 'default',
                         labels: Array.isArray(n.labels) ? n.labels : [],
                         checklistItems: cleanItems,
@@ -1389,7 +1403,18 @@
                             ? n.rawAttachedLocationNames
                             : (n.location ? [n.location] : []),
                         attachedLocations: n.rawAttachedLocations || [],
+                        attachedLocationGroupName: n.attachedLocationGroupName || null,
+                        images: Array.isArray(n.images) ? n.images : [],
+                        audioRecordings: Array.isArray(n.audioRecordings) ? n.audioRecordings : [],
                         timeReminderMillis: n.timeReminderMillis || null,
+                        timeWindowStartHour: n.timeWindowStartHour || null,
+                        timeWindowStartMinute: n.timeWindowStartMinute || null,
+                        timeWindowEndHour: n.timeWindowEndHour || null,
+                        timeWindowEndMinute: n.timeWindowEndMinute || null,
+                        timeWindowDaysOfWeek: Array.isArray(n.timeWindowDaysOfWeek) ? n.timeWindowDaysOfWeek : [],
+                        snoozeUntilMillis: n.snoozeUntilMillis || null,
+                        isFullScreenReminder: n.isFullScreenReminder != null ? n.isFullScreenReminder : null,
+                        repeatInterval: n.repeatInterval || 'DOES_NOT_REPEAT',
                         createdAt: n.createdAt || Date.now(),
                         updatedAt: n.updatedAt || Date.now()
                     };
@@ -1402,7 +1427,8 @@
                     content: d.content || '',
                     createdAt: d.createdAt || 0,
                     deletedAt: d.deletedAt || Date.now()
-                }))
+                })),
+                userSettings: backupUserSettings || null
             };
         }
 
@@ -1820,12 +1846,14 @@
                 card.appendChild(emptyP);
             }
 
-            // Chips: Labels, Location, Reminder
+            // Chips: Labels, Location, Reminder, Media Attachments
             const hasLabels = n.labels && n.labels.length > 0;
             const hasLocation = !!n.location;
             const hasReminder = !!n.reminder;
+            const hasImages = Array.isArray(n.images) && n.images.length > 0;
+            const hasAudio = Array.isArray(n.audioRecordings) && n.audioRecordings.length > 0;
 
-            if (hasLabels || hasLocation || hasReminder) {
+            if (hasLabels || hasLocation || hasReminder || hasImages || hasAudio) {
                 const chips = document.createElement('div');
                 chips.className = 'note-chips';
 
@@ -1859,6 +1887,26 @@
                     rem.className = 'chip chip-reminder';
                     rem.textContent = '⏰ ' + n.reminder;
                     chips.appendChild(rem);
+                }
+
+                // Images & Drawings chip
+                if (hasImages) {
+                    const imgChip = document.createElement('span');
+                    imgChip.className = 'chip chip-location';
+                    imgChip.style.background = '#e8f0fe';
+                    imgChip.style.color = '#1967d2';
+                    imgChip.textContent = `🖼️ Photo/Drawing (${n.images.length})`;
+                    chips.appendChild(imgChip);
+                }
+
+                // Audio recording chip
+                if (hasAudio) {
+                    const audChip = document.createElement('span');
+                    audChip.className = 'chip chip-location';
+                    audChip.style.background = '#fce8e6';
+                    audChip.style.color = '#c5221f';
+                    audChip.textContent = `🎙️ Voice Memo (${n.audioRecordings.length})`;
+                    chips.appendChild(audChip);
                 }
 
                 card.appendChild(chips);
