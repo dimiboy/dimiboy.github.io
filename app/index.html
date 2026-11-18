@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <!-- Strict Content Security Policy (Zero XSS / Zero Injection) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://keeplocate.dimustech.net https://dimiboy.github.io; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; connect-src 'self' https://www.googleapis.com https://accounts.google.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>KeepLocate Web App</title>
+    <title>KeepLocate Web Companion 📍</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
-            --primary: #4285F4;
-            --primary-dark: #3367D6;
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --bg: #f8f9fa;
             --surface: #ffffff;
-            --background: #f1f3f4;
             --text-primary: #202124;
             --text-secondary: #5f6368;
             --border: #dadce0;
@@ -31,71 +33,84 @@
             --card-chalk: #e6c9a8;
             --card-gray: #e8eaed;
         }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background);
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+
+        /* Top Header */
         header {
-            background-color: var(--surface);
+            background: var(--surface);
             border-bottom: 1px solid var(--border);
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
             position: sticky;
             top: 0;
             z-index: 100;
+            gap: 1rem;
         }
+
         .header-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            font-family: 'Google Sans', sans-serif;
             font-weight: 700;
             font-size: 1.25rem;
-            color: var(--primary-dark);
+            color: var(--text-primary);
             text-decoration: none;
             flex-shrink: 0;
         }
+
         .header-search {
             flex: 1;
-            max-width: 550px;
-            display: flex;
-            align-items: center;
+            max-width: 640px;
             background: #f1f3f4;
             border-radius: 8px;
-            padding: 0.5rem 1rem;
-            gap: 8px;
+            padding: 0.55rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             border: 1px solid transparent;
+            transition: all 0.2s;
         }
+
         .header-search:focus-within {
-            background: #ffffff;
+            background: var(--surface);
             border-color: var(--border);
             box-shadow: 0 1px 3px rgba(0,0,0,0.12);
         }
+
         .header-search input {
             border: none;
             background: transparent;
-            width: 100%;
             outline: none;
-            font-size: 1rem;
+            width: 100%;
+            font-size: 0.95rem;
+            font-family: inherit;
             color: var(--text-primary);
         }
+
         .header-right {
             display: flex;
             align-items: center;
-            gap: 0.65rem;
+            gap: 0.75rem;
             flex-shrink: 0;
         }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -169,6 +184,7 @@
             border-radius: 50%;
             background-color: currentColor;
         }
+
         main {
             flex: 1;
             max-width: 1200px;
@@ -176,11 +192,12 @@
             margin: 0 auto;
             padding: 1.5rem;
         }
+
         /* Top Banner */
         .sync-banner {
             border-radius: 10px;
             padding: 1rem 1.25rem;
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -225,9 +242,78 @@
             flex-shrink: 0;
         }
 
+        /* Navigation Views & Tabs */
+        .view-nav-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .nav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            overflow-x: auto;
+        }
+        .nav-tab {
+            background: transparent;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .nav-tab:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
+        .nav-tab.active {
+            background: #e8f0fe;
+            color: var(--primary-dark);
+        }
+        .labels-filter-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+        .label-filter-chip {
+            font-size: 0.8rem;
+            padding: 4px 11px;
+            border-radius: 14px;
+            background: #f1f3f4;
+            color: #5f6368;
+            cursor: pointer;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .label-filter-chip:hover {
+            background: #e8eaed;
+        }
+        .label-filter-chip.active {
+            background: #e8f0fe;
+            color: var(--primary-dark);
+            border-color: #aecbfa;
+            font-weight: 600;
+        }
+
         .create-bar-wrapper {
             max-width: 600px;
-            margin: 0 auto 2rem;
+            margin: 0 auto 1.75rem;
         }
         .create-bar {
             background: var(--surface);
@@ -248,49 +334,70 @@
             font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.8px;
             color: var(--text-secondary);
-            margin: 1.5rem 0 0.75rem;
+            margin: 1.5rem 0 0.75rem 0.25rem;
         }
+
+        /* Notes Masonry Grid */
         .notes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            align-items: start;
         }
+
         .note-card {
-            background: var(--card-default);
-            border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 1rem;
+            border: 1px solid var(--border);
+            padding: 1rem 1rem 0.85rem;
+            position: relative;
+            cursor: pointer;
+            transition: box-shadow 0.15s, transform 0.05s;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            transition: box-shadow 0.15s, transform 0.15s;
-            cursor: pointer;
-            position: relative;
+            gap: 8px;
+            word-break: break-word;
         }
         .note-card:hover {
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
         }
-        .note-card .pin-btn {
+
+        .card-top-actions {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .card-action-btn {
             background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
-            opacity: 0.4;
-            transition: opacity 0.15s;
+            font-size: 0.95rem;
+            opacity: 0.35;
+            transition: opacity 0.15s, transform 0.1s;
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
-        .note-card:hover .pin-btn, .note-card .pin-btn.pinned {
+        .note-card:hover .card-action-btn, .card-action-btn.active {
+            opacity: 0.9;
+        }
+        .card-action-btn:hover {
             opacity: 1;
+            transform: scale(1.15);
+            background: rgba(0,0,0,0.06);
         }
+
         .note-card h3 {
             font-size: 1.05rem;
             font-weight: 600;
-            padding-right: 24px;
+            padding-right: 50px;
         }
         .note-card p {
             font-size: 0.95rem;
@@ -342,7 +449,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
         .chip {
             font-size: 0.75rem;
@@ -357,11 +464,18 @@
         .chip-location {
             background: #e8f0fe;
             color: var(--primary-dark);
+            cursor: help;
         }
         .chip-reminder {
             background: #fef7e0;
             color: #b06000;
         }
+        .chip-label {
+            background: #f1f3f4;
+            color: #3c4043;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+
         /* Modal */
         .modal-overlay {
             position: fixed;
@@ -380,12 +494,14 @@
             background: var(--surface);
             border-radius: 12px;
             width: 100%;
-            max-width: 540px;
+            max-width: 580px;
             padding: 1.25rem;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .modal-card input, .modal-card textarea {
             border: none;
@@ -400,9 +516,67 @@
         }
         .modal-card textarea.content-input {
             font-size: 1rem;
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
+
+        /* Modal Subsections (Labels, Locations, Reminders) */
+        .modal-meta-section {
+            border-top: 1px dashed rgba(0,0,0,0.12);
+            padding-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .modal-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .modal-chips-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .modal-chip-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.06);
+        }
+        .modal-chip-item .chip-del-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0 2px;
+        }
+        .modal-chip-item .chip-del-btn:hover {
+            color: #d93025;
+        }
+        .modal-input-compact {
+            border: 1px solid var(--border) !important;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.82rem;
+            background: #ffffff !important;
+            width: auto !important;
+        }
+        select.modal-input-compact {
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
         .modal-actions {
             display: flex;
             justify-content: space-between;
@@ -429,9 +603,11 @@
         .color-dot:hover {
             transform: scale(1.15);
         }
-        /* Auth Info Dialog */
+
+        /* Generic Info Dialog */
         .info-modal {
-            max-width: 480px;
+            max-width: 500px;
+            width: 100%;
             padding: 1.5rem;
             background: #ffffff;
             border-radius: 12px;
@@ -439,6 +615,8 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            max-height: 85vh;
+            overflow-y: auto;
         }
         .info-modal h3 {
             font-size: 1.2rem;
@@ -449,18 +627,27 @@
             color: var(--text-secondary);
             line-height: 1.5;
         }
-        .info-modal ol {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            padding-left: 1.25rem;
-            line-height: 1.6;
-        }
         .info-modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
             margin-top: 0.5rem;
         }
+
+        /* Places list styling inside Saved Places modal */
+        .place-item-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .place-item-card:hover {
+            background: #f8f9fa;
+        }
+
         @media (max-width: 650px) {
             header {
                 padding: 0.5rem 1rem;
@@ -486,7 +673,7 @@
         </a>
         <div class="header-search">
             <span>🔍</span>
-            <input type="text" id="searchInput" placeholder="Search notes and locations...">
+            <input type="text" id="searchInput" placeholder="Search notes, checklists, locations, labels...">
         </div>
         <div class="header-right">
             <!-- Sync Status Pill -->
@@ -544,14 +731,35 @@
 
         <input type="file" id="backupFileInput" accept=".json,application/json" style="display: none;" onchange="handleFileImport(event)">
 
-        <div class="create-bar-wrapper">
+        <!-- View Switcher & Labels Filter -->
+        <div class="view-nav-bar">
+            <div class="nav-tabs">
+                <button class="nav-tab active" id="tabNotes" onclick="switchView('notes')">📝 Notes</button>
+                <button class="nav-tab" id="tabArchive" onclick="switchView('archive')">📦 Archive (<span id="archiveCount">0</span>)</button>
+                <button class="nav-tab" id="tabPlaces" onclick="openPlacesModal()">📍 Saved Places (<span id="placesCount">0</span>)</button>
+            </div>
+            <div class="labels-filter-container" id="labelsFilterContainer">
+                <!-- Dynamically populated label filter chips -->
+            </div>
+        </div>
+
+        <!-- Note Create Bar (Shown in Notes view) -->
+        <div class="create-bar-wrapper" id="createBarWrapper">
             <div class="create-bar">
                 <span onclick="openNewNoteModal(false)" style="flex: 1; cursor: pointer;">Take a note or checklist...</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button type="button" class="btn" onclick="openNewNoteModal(true)" title="New list" style="padding: 4px 8px; border: none; background: transparent; cursor: pointer; font-size: 1.15rem; line-height: 1;">☑️</button>
+                    <button type="button" class="btn" onclick="openNewNoteModal(true)" title="New checklist" style="padding: 4px 8px; border: none; background: transparent; cursor: pointer; font-size: 1.15rem; line-height: 1;">☑️</button>
                     <span onclick="openNewNoteModal(false)" style="font-size: 1.15rem; cursor: pointer; line-height: 1;" title="New note">✏️</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Archive Header Banner (Shown in Archive view) -->
+        <div id="archiveViewBanner" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding: 0.5rem 0.25rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>📦</span> Archived Notes
+            </h3>
+            <button class="btn btn-sm" onclick="switchView('notes')">← Back to Notes</button>
         </div>
 
         <div id="pinnedSection" style="display: none;">
@@ -570,7 +778,7 @@
             <textarea id="modalContent" class="content-input" placeholder="Take a note..."></textarea>
             
             <div id="modalChecklistArea" style="display: none; flex-direction: column; gap: 8px; margin: 8px 0;">
-                <div id="modalChecklistItems" style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto;"></div>
+                <div id="modalChecklistItems" style="display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto;"></div>
                 <div class="modal-add-item-row" style="display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px dashed rgba(0,0,0,0.12);">
                     <span style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1; padding-left: 2px;">+</span>
                     <input type="text" id="newChecklistItemInput" placeholder="List item" style="flex: 1; border: none; background: transparent; font-size: 0.95rem; outline: none; color: var(--text-primary); font-family: inherit;" onkeydown="handleNewChecklistKeyDown(event)">
@@ -578,6 +786,52 @@
                 </div>
             </div>
 
+            <!-- Labels Editor Section -->
+            <div class="modal-meta-section">
+                <div class="modal-section-title">🏷️ Labels</div>
+                <div class="modal-chips-row" id="modalLabelsList"></div>
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+                    <select id="modalExistingLabelSelect" class="modal-input-compact" onchange="addSelectedExistingLabel(event)">
+                        <option value="">+ Choose existing label...</option>
+                    </select>
+                    <input type="text" id="modalCustomLabelInput" class="modal-input-compact" placeholder="Or type new label..." style="max-width: 170px;" onkeydown="handleCustomLabelKeyDown(event)">
+                    <button type="button" class="btn btn-sm" onclick="addCustomLabelFromInput()">Add</button>
+                </div>
+            </div>
+
+            <!-- Location Reminder Section -->
+            <div class="modal-meta-section">
+                <div class="modal-section-title">📍 Location Reminder</div>
+                <div id="modalLocationDisplay" class="modal-chips-row">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">No location set</span>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                    <select id="modalLocationPresetSelect" class="modal-input-compact" onchange="applyLocationPreset(event)">
+                        <option value="">📍 Select saved place...</option>
+                    </select>
+                    <input type="text" id="modalCustomLocName" class="modal-input-compact" placeholder="Or place name..." style="max-width: 150px;">
+                    <select id="modalLocTriggerSelect" class="modal-input-compact">
+                        <option value="ENTER">On Arrival (Enter)</option>
+                        <option value="EXIT">On Departure (Exit)</option>
+                    </select>
+                    <button type="button" class="btn btn-sm" onclick="setCustomLocationFromModal()">Set</button>
+                </div>
+            </div>
+
+            <!-- Date & Time Reminder Section -->
+            <div class="modal-meta-section">
+                <div class="modal-section-title">⏰ Time Reminder</div>
+                <div id="modalReminderDisplay" class="modal-chips-row">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">No time reminder set</span>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                    <input type="datetime-local" id="modalDateTimeInput" class="modal-input-compact">
+                    <button type="button" class="btn btn-sm" onclick="setModalReminderFromInput()">Set Reminder</button>
+                    <button type="button" class="btn btn-sm" onclick="setQuickReminder('tomorrow')">Tomorrow 9 AM</button>
+                </div>
+            </div>
+
+            <!-- Bottom Modal Actions -->
             <div class="modal-actions">
                 <div class="color-palette">
                     <div class="color-dot" title="Default" style="background: var(--card-default);" onclick="setCardColor('#ffffff')"></div>
@@ -595,9 +849,47 @@
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button type="button" class="btn" id="btnToggleChecklist" onclick="toggleModalMode()" style="font-size: 0.82rem; padding: 6px 10px;" title="Toggle checklist / note">☑️ List</button>
-                    <button class="btn" onclick="deleteCurrentNote()" id="btnDeleteNote" style="display: none; color: #d93025;">Delete</button>
+                    <button type="button" class="btn" id="btnModalArchive" onclick="toggleCurrentNoteArchive()" style="display: none; font-size: 0.82rem; padding: 6px 10px;">📦 Archive</button>
+                    <button class="btn" onclick="deleteCurrentNote()" id="btnDeleteNote" style="display: none; color: #d93025; font-size: 0.82rem; padding: 6px 10px;">Delete</button>
                     <button class="btn btn-primary" onclick="saveNote()">Done</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Places & Presets Modal -->
+    <div class="modal-overlay" id="placesModal" onclick="handlePlacesOverlayClick(event)">
+        <div class="info-modal" style="max-width: 540px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>📍 Saved Places & Location Presets</h3>
+                <button class="btn btn-sm" onclick="closePlacesModal()">✕</button>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">These saved places sync with your KeepLocate Android app for instant arrival/departure geofencing triggers.</p>
+            
+            <div id="placesListContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;">
+                <!-- Dynamically rendered location presets -->
+            </div>
+
+            <!-- Add New Place Form -->
+            <div style="border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">+ Add New Location Preset</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <input type="text" id="newPlaceName" class="modal-input-compact" placeholder="Place Name (e.g. Home)">
+                    <input type="text" id="newPlaceAddress" class="modal-input-compact" placeholder="Address (optional)">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                    <input type="number" id="newPlaceLat" class="modal-input-compact" placeholder="Latitude (opt)" step="any">
+                    <input type="number" id="newPlaceLng" class="modal-input-compact" placeholder="Longitude (opt)" step="any">
+                    <select id="newPlaceTrigger" class="modal-input-compact">
+                        <option value="ENTER">On Arrival</option>
+                        <option value="EXIT">On Departure</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm" style="align-self: flex-start; margin-top: 4px;" onclick="addNewPlacePreset()">Save Place Preset</button>
+            </div>
+
+            <div class="info-modal-actions">
+                <button class="btn" onclick="closePlacesModal()">Close</button>
             </div>
         </div>
     </div>
@@ -644,16 +936,22 @@
             color: '#cbf0f8',
             colorId: 'fog',
             isPinned: true,
+            isArchived: false,
+            labels: ['Getting Started'],
             location: null,
             reminder: null,
             checklistItems: [
                 { text: 'Sync your Android notes with Google Drive', isChecked: true, position: 0 },
                 { text: 'Check off list items directly from web cards', isChecked: false, position: 1 },
-                { text: 'Private & secure in your Google Drive AppData folder', isChecked: false, position: 2 }
-            ]
+                { text: 'Manage labels, location reminders & archive', isChecked: false, position: 2 },
+                { text: 'Private & secure in your Google Drive AppData folder', isChecked: false, position: 3 }
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         };
 
         let notes = [];
+        let deletedNotes = [];
         let currentNoteId = null;
         let selectedColor = '#ffffff';
         let accessToken = null;
@@ -662,9 +960,17 @@
         let tokenClient = null;
         let isModalChecklistMode = false;
         let uploadDebounceTimer = null;
+        let currentView = 'notes'; // 'notes' or 'archive'
+        let selectedLabelFilter = null; // null means 'All'
+
         let backupLocationPoints = [];
         let backupLocationGroups = [];
         let backupCustomLabels = [];
+
+        // Temporary editing state for currently open modal
+        let modalDraftLabels = [];
+        let modalDraftLocation = null;
+        let modalDraftReminderMillis = null;
 
         function debouncedUploadToDrive(delay = 1500) {
             if (!accessToken) return;
@@ -677,6 +983,7 @@
         // Initialize state on load
         function initApp() {
             loadNotesFromLocal();
+            loadDeletedNotesFromLocal();
             checkSavedSession();
             initGoogleIdentity();
         }
@@ -727,36 +1034,12 @@
         function handleTokenError(err) {
             console.error('Google Auth Error:', err);
             updateSyncStatus('local', 'Local Mode');
-            
-            if (err && err.type === 'popup_closed_by_user') {
-                return; // User intentionally closed popup
-            }
+            if (err && err.type === 'popup_closed_by_user') return;
 
             const container = document.createElement('div');
-            if (err && (err.type === 'origin_mismatch' || err.message?.includes('origin_mismatch'))) {
-                const p1 = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = 'Google OAuth Origin Configuration:';
-                p1.appendChild(strong);
-
-                const p2 = document.createElement('p');
-                p2.textContent = 'The domain ';
-                const code = document.createElement('code');
-                code.textContent = 'https://keeplocate.dimustech.net';
-                p2.appendChild(code);
-                p2.appendChild(document.createTextNode(' needs to be added as an Authorized JavaScript Origin for Web Client ID in the Google Cloud Console.'));
-
-                const p3 = document.createElement('p');
-                p3.textContent = 'In the meantime, you can use "Import Backup JSON" to load your KeepLocate notes directly into this web app!';
-
-                container.appendChild(p1);
-                container.appendChild(p2);
-                container.appendChild(p3);
-            } else {
-                const p = document.createElement('p');
-                p.textContent = 'Could not complete Google Sign-In. You can still use KeepLocate in Local Mode or import your backup JSON.';
-                container.appendChild(p);
-            }
+            const p = document.createElement('p');
+            p.textContent = 'Could not complete Google Sign-In. You can still use KeepLocate in Local Mode or import your backup JSON.';
+            container.appendChild(p);
             showInfoModalNode('Sign-In Information', container);
         }
 
@@ -778,7 +1061,6 @@
         async function fetchUserProfileAndDriveFiles() {
             try {
                 updateSyncStatus('syncing', 'Connecting to Drive...');
-                // 1. Fetch user email
                 const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -788,8 +1070,6 @@
                     sessionStorage.setItem('keeplocate_google_email', userEmail);
                     showConnectedUI(userEmail);
                 }
-
-                // 2. Fetch AppData backup file
                 await syncDriveNow();
             } catch (e) {
                 console.error('Profile fetch failed:', e);
@@ -837,7 +1117,6 @@
 
                 if (backupFile) {
                     driveFileId = backupFile.id;
-                    // Download remote backup
                     const fileRes = await fetch(
                         `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
                         { headers: { 'Authorization': `Bearer ${accessToken}` } }
@@ -862,8 +1141,7 @@
                     }
                 }
 
-                // No remote file yet -> only upload if user explicitly created or imported notes
-                const hasCustomNotes = notes.length > 0 && !notes.every(n => n.id === 'welcome-1');
+                const hasCustomNotes = notes.length > 0 && !notes.every(n => n.id === 'welcome-note');
                 if (hasCustomNotes) {
                     await uploadNotesToDrive();
                 } else {
@@ -888,7 +1166,6 @@
 
                 let uploadRes;
                 if (driveFileId) {
-                    // Update existing backup file: media PATCH
                     uploadRes = await fetch(
                         `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
                         {
@@ -901,7 +1178,6 @@
                         }
                     );
                 } else {
-                    // Create initial backup file in appDataFolder: multipart POST
                     const boundary = '-------KeepLocateBoundary' + Math.random().toString(36).substring(2);
                     const delimiter = '\r\n--' + boundary + '\r\n';
                     const closeDelimiter = '\r\n--' + boundary + '--';
@@ -960,7 +1236,6 @@
         function handleDriveError(status, message) {
             lastDriveError = { status, message };
             updateSyncStatus('error', 'Sync Error');
-            
             const container = document.createElement('div');
             const isServiceDisabled = (typeof message === 'string' && (
                 message.includes('has not been used in project') ||
@@ -972,45 +1247,17 @@
                 const titleP = document.createElement('p');
                 titleP.style.fontWeight = '600';
                 titleP.style.color = '#c5221f';
-                titleP.style.marginBottom = '0.5rem';
-                titleP.textContent = 'Google Drive API is not enabled yet in your Google Cloud Project:';
-                
+                titleP.textContent = 'Google Drive API is not enabled yet:';
                 const descP = document.createElement('p');
-                descP.style.fontSize = '0.92rem';
-                descP.style.color = '#3c4043';
-                descP.textContent = 'Your Google Cloud Project (964583081853) needs the "Google Drive API" enabled to store and sync your private KeepLocate notes.';
-                
-                const btnWrapper = document.createElement('div');
-                btnWrapper.style.margin = '1rem 0';
-                const link = document.createElement('a');
-                link.href = 'https://console.cloud.google.com/apis/library/drive.googleapis.com?project=964583081853';
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.className = 'btn btn-primary';
-                link.style.display = 'inline-block';
-                link.style.textDecoration = 'none';
-                link.style.fontWeight = '600';
-                link.textContent = '👉 Click Here to Enable Google Drive API in Google Cloud Console';
-                btnWrapper.appendChild(link);
-
-                const footerP = document.createElement('p');
-                footerP.style.fontSize = '0.85rem';
-                footerP.style.color = '#5f6368';
-                footerP.textContent = '1. Click the button above to open Google Cloud Console. 2. Tap the blue "ENABLE" button. 3. Return here and tap "🔄 Sync Now".';
-
+                descP.textContent = 'Your Google Cloud Project (964583081853) needs Google Drive API enabled.';
                 container.appendChild(titleP);
                 container.appendChild(descP);
-                container.appendChild(btnWrapper);
-                container.appendChild(footerP);
-
                 showInfoModalNode('Google Drive API Required', container);
             } else {
                 const p1 = document.createElement('p');
                 p1.style.fontWeight = '600';
                 p1.textContent = `Sync Error (${status}):`;
                 const p2 = document.createElement('p');
-                p2.style.fontSize = '0.9rem';
-                p2.style.color = '#5f6368';
                 p2.textContent = message || 'Could not contact Google Drive.';
                 container.appendChild(p1);
                 container.appendChild(p2);
@@ -1018,6 +1265,7 @@
             }
         }
 
+        // Parse and apply Drive backup payload with soft-delete & tombstones
         function parseAndApplyBackupJson(jsonText) {
             try {
                 const payload = JSON.parse(jsonText);
@@ -1025,6 +1273,16 @@
                     backupLocationPoints = Array.isArray(payload.locationPoints) ? payload.locationPoints : [];
                     backupLocationGroups = Array.isArray(payload.locationGroups) ? payload.locationGroups : [];
                     backupCustomLabels = Array.isArray(payload.customLabels) ? payload.customLabels : [];
+                    
+                    // Merge remote deletedNotes tombstones
+                    if (Array.isArray(payload.deletedNotes)) {
+                        for (const del of payload.deletedNotes) {
+                            if (!deletedNotes.some(d => (d.createdAt && d.createdAt === del.createdAt) || (d.title && d.title === del.title))) {
+                                deletedNotes.push(del);
+                            }
+                        }
+                        saveDeletedNotesToLocal();
+                    }
                 }
 
                 if (payload && Array.isArray(payload.notes)) {
@@ -1052,14 +1310,18 @@
                             details: typeof ci.details === 'string' ? ci.details : ''
                         }));
 
+                        const rawLabels = Array.isArray(item.labels) ? item.labels : [];
+
                         return {
-                            id: 'note-' + (item.createdAt || Date.now() + index),
+                            id: 'note-' + (item.createdAt || (Date.now() + index)),
                             title: item.title || '',
                             content: item.content || '',
                             type: item.type || (cleanItems.length > 0 ? 'CHECKLIST' : 'TEXT'),
                             color: hexColor,
                             colorId: item.colorId || 'default',
                             isPinned: !!item.isPinned,
+                            isArchived: !!item.isArchived,
+                            labels: rawLabels,
                             location: locationStr,
                             reminder: reminderStr,
                             rawAttachedLocations: item.attachedLocations || [],
@@ -1070,7 +1332,20 @@
                             updatedAt: item.updatedAt || Date.now()
                         };
                     });
+
+                    // Remove any notes that match tombstones in deletedNotes
+                    notes = notes.filter(n => {
+                        const isDeleted = deletedNotes.some(del => {
+                            const matchCreated = del.createdAt && n.createdAt && Math.abs(del.createdAt - n.createdAt) < 5000;
+                            const matchTitle = del.title && n.title && del.title.trim().toLowerCase() === n.title.trim().toLowerCase();
+                            return (matchCreated || matchTitle) && (del.deletedAt >= n.updatedAt);
+                        });
+                        return !isDeleted;
+                    });
+
                     saveToLocal();
+                    updateCounts();
+                    renderLabelsFilterBar();
                     renderNotes();
                 }
             } catch (e) {
@@ -1079,6 +1354,12 @@
         }
 
         function buildBackupPayload() {
+            // Collect all unique labels
+            const allLabels = Array.from(new Set([
+                ...backupCustomLabels,
+                ...notes.flatMap(n => n.labels || [])
+            ])).filter(l => l && l.trim().length > 0);
+
             return {
                 version: 1,
                 exportedAt: Date.now(),
@@ -1097,11 +1378,11 @@
                         title: n.title || '',
                         content: n.content || '',
                         type: isList ? 'CHECKLIST' : 'TEXT',
-                        isPinned: !!n.isPinned,
-                        isArchived: false,
+                        isPinned: !n.isArchived && !!n.isPinned,
+                        isArchived: !!n.isArchived,
                         isLocked: false,
                         colorId: n.colorId || 'default',
-                        labels: [],
+                        labels: Array.isArray(n.labels) ? n.labels : [],
                         checklistItems: cleanItems,
                         attachedLocationNames: n.rawAttachedLocationNames && n.rawAttachedLocationNames.length > 0
                             ? n.rawAttachedLocationNames
@@ -1114,7 +1395,12 @@
                 }),
                 locationPoints: backupLocationPoints,
                 locationGroups: backupLocationGroups,
-                customLabels: backupCustomLabels
+                customLabels: allLabels,
+                deletedNotes: deletedNotes.map(d => ({
+                    title: d.title || '',
+                    createdAt: d.createdAt || 0,
+                    deletedAt: d.deletedAt || Date.now()
+                }))
             };
         }
 
@@ -1214,30 +1500,133 @@
                 notes = [WELCOME_NOTE];
                 saveToLocal();
             }
+            updateCounts();
+            renderLabelsFilterBar();
             renderNotes();
         }
 
         function saveToLocal() {
             localStorage.setItem('keeplocate_web_notes', JSON.stringify(notes));
+            updateCounts();
         }
 
-        // Notes Rendering (Safe DOM APIs - Zero XSS)
+        function loadDeletedNotesFromLocal() {
+            const saved = localStorage.getItem('keeplocate_web_deleted_notes');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    deletedNotes = Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    deletedNotes = [];
+                }
+            } else {
+                deletedNotes = [];
+            }
+        }
+
+        function saveDeletedNotesToLocal() {
+            localStorage.setItem('keeplocate_web_deleted_notes', JSON.stringify(deletedNotes));
+        }
+
+        function updateCounts() {
+            const archCount = notes.filter(n => !!n.isArchived).length;
+            const archiveEl = document.getElementById('archiveCount');
+            if (archiveEl) archiveEl.textContent = archCount;
+
+            const placesEl = document.getElementById('placesCount');
+            if (placesEl) placesEl.textContent = backupLocationPoints.length;
+        }
+
+        // View Switching (Notes vs Archive)
+        function switchView(view) {
+            currentView = view;
+            const tabNotes = document.getElementById('tabNotes');
+            const tabArchive = document.getElementById('tabArchive');
+            const createBar = document.getElementById('createBarWrapper');
+            const archBanner = document.getElementById('archiveViewBanner');
+
+            if (view === 'archive') {
+                tabNotes.classList.remove('active');
+                tabArchive.classList.add('active');
+                createBar.style.display = 'none';
+                archBanner.style.display = 'flex';
+            } else {
+                tabNotes.classList.add('active');
+                tabArchive.classList.remove('active');
+                createBar.style.display = 'block';
+                archBanner.style.display = 'none';
+            }
+            renderNotes();
+        }
+
+        // Labels Filter Bar Rendering
+        function renderLabelsFilterBar() {
+            const container = document.getElementById('labelsFilterContainer');
+            if (!container) return;
+            container.replaceChildren();
+
+            const allLabels = Array.from(new Set([
+                ...backupCustomLabels,
+                ...notes.flatMap(n => n.labels || [])
+            ])).filter(l => l && l.trim().length > 0).sort();
+
+            if (allLabels.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'flex';
+
+            // All Chip
+            const allChip = document.createElement('div');
+            allChip.className = 'label-filter-chip' + (selectedLabelFilter === null ? ' active' : '');
+            allChip.textContent = '🏷️ All';
+            allChip.onclick = () => {
+                selectedLabelFilter = null;
+                renderLabelsFilterBar();
+                renderNotes();
+            };
+            container.appendChild(allChip);
+
+            allLabels.forEach(lbl => {
+                const chip = document.createElement('div');
+                chip.className = 'label-filter-chip' + (selectedLabelFilter === lbl ? ' active' : '');
+                chip.textContent = '🏷️ ' + lbl;
+                chip.onclick = () => {
+                    selectedLabelFilter = (selectedLabelFilter === lbl) ? null : lbl;
+                    renderLabelsFilterBar();
+                    renderNotes();
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        // Notes Rendering (Safe Native DOM APIs - Zero Injection)
         function renderNotes() {
             const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const isArchiveView = (currentView === 'archive');
+
             const filtered = notes.filter(n => {
+                const noteIsArchived = !!n.isArchived;
+                if (isArchiveView !== noteIsArchived) return false;
+
+                if (selectedLabelFilter) {
+                    if (!n.labels || !n.labels.includes(selectedLabelFilter)) return false;
+                }
+
                 if (!query) return true;
                 const matchTitle = n.title && n.title.toLowerCase().includes(query);
                 const matchContent = n.content && n.content.toLowerCase().includes(query);
                 const matchLocation = n.location && n.location.toLowerCase().includes(query);
+                const matchLabels = n.labels && n.labels.some(l => l.toLowerCase().includes(query));
                 const matchChecklist = n.checklistItems && n.checklistItems.some(
                     item => (item.text && item.text.toLowerCase().includes(query)) ||
                             (item.details && item.details.toLowerCase().includes(query))
                 );
-                return matchTitle || matchContent || matchLocation || matchChecklist;
+                return matchTitle || matchContent || matchLocation || matchLabels || matchChecklist;
             });
 
-            const pinned = filtered.filter(n => n.isPinned);
-            const others = filtered.filter(n => !n.isPinned);
+            const pinned = filtered.filter(n => !n.isArchived && n.isPinned);
+            const others = filtered.filter(n => n.isArchived || !n.isPinned);
 
             const pinnedSec = document.getElementById('pinnedSection');
             const pinnedGrid = document.getElementById('pinnedNotesGrid');
@@ -1247,7 +1636,7 @@
             pinnedGrid.replaceChildren();
             notesGrid.replaceChildren();
 
-            if (pinned.length > 0) {
+            if (!isArchiveView && pinned.length > 0) {
                 pinnedSec.style.display = 'block';
                 othersTitle.style.display = others.length > 0 ? 'block' : 'none';
                 pinned.forEach(n => pinnedGrid.appendChild(createNoteCard(n)));
@@ -1256,7 +1645,27 @@
                 othersTitle.style.display = 'none';
             }
 
-            others.forEach(n => notesGrid.appendChild(createNoteCard(n)));
+            if (filtered.length === 0) {
+                const emptyWrap = document.createElement('div');
+                emptyWrap.style.gridColumn = '1 / -1';
+                emptyWrap.style.textAlign = 'center';
+                emptyWrap.style.padding = '3rem 1rem';
+                emptyWrap.style.color = 'var(--text-secondary)';
+                
+                const icon = document.createElement('div');
+                icon.style.fontSize = '2.5rem';
+                icon.style.marginBottom = '0.5rem';
+                icon.textContent = isArchiveView ? '📦' : '📝';
+
+                const p = document.createElement('p');
+                p.textContent = isArchiveView ? 'Your archive is empty.' : (query ? 'No matching notes found.' : 'No notes yet. Tap "+ Note" or "Take a note..." to start.');
+
+                emptyWrap.appendChild(icon);
+                emptyWrap.appendChild(p);
+                notesGrid.appendChild(emptyWrap);
+            } else {
+                others.forEach(n => notesGrid.appendChild(createNoteCard(n)));
+            }
         }
 
         function createNoteCard(n) {
@@ -1264,22 +1673,46 @@
             card.className = 'note-card';
             card.style.backgroundColor = n.color || '#ffffff';
             card.onclick = (e) => {
-                if (e.target.classList.contains('pin-btn') || e.target.classList.contains('card-cb')) return;
+                if (e.target.closest('.card-action-btn') || e.target.classList.contains('card-cb')) return;
                 openEditNoteModal(n.id);
             };
 
-            const pinBtn = document.createElement('button');
-            pinBtn.className = 'pin-btn' + (n.isPinned ? ' pinned' : '');
-            pinBtn.textContent = n.isPinned ? '📌' : '📍';
-            pinBtn.title = n.isPinned ? 'Unpin note' : 'Pin note to top';
-            pinBtn.onclick = (e) => {
+            // Top action buttons: Pin and Archive
+            const actionsWrap = document.createElement('div');
+            actionsWrap.className = 'card-top-actions';
+
+            if (!n.isArchived) {
+                const pinBtn = document.createElement('button');
+                pinBtn.className = 'card-action-btn' + (n.isPinned ? ' active' : '');
+                pinBtn.textContent = n.isPinned ? '📌' : '📍';
+                pinBtn.title = n.isPinned ? 'Unpin note' : 'Pin note to top';
+                pinBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    n.isPinned = !n.isPinned;
+                    n.updatedAt = Date.now();
+                    saveToLocal();
+                    renderNotes();
+                    if (accessToken) debouncedUploadToDrive(1000);
+                };
+                actionsWrap.appendChild(pinBtn);
+            }
+
+            const archiveBtn = document.createElement('button');
+            archiveBtn.className = 'card-action-btn';
+            archiveBtn.textContent = '📦';
+            archiveBtn.title = n.isArchived ? 'Unarchive note' : 'Archive note';
+            archiveBtn.onclick = (e) => {
                 e.stopPropagation();
-                n.isPinned = !n.isPinned;
+                n.isArchived = !n.isArchived;
+                if (n.isArchived) n.isPinned = false;
+                n.updatedAt = Date.now();
                 saveToLocal();
+                updateCounts();
                 renderNotes();
                 if (accessToken) debouncedUploadToDrive(1000);
             };
-            card.appendChild(pinBtn);
+            actionsWrap.appendChild(archiveBtn);
+            card.appendChild(actionsWrap);
 
             if (n.title && n.title.trim()) {
                 const title = document.createElement('h3');
@@ -1297,7 +1730,6 @@
                 const checklistContainer = document.createElement('div');
                 checklistContainer.className = 'card-checklist';
 
-                // Display items: unchecked first, then checked (preserving original index for toggling)
                 const indexedItems = n.checklistItems.map((item, originalIndex) => ({ item, originalIndex }));
                 indexedItems.sort((a, b) => {
                     if (a.item.isChecked === b.item.isChecked) {
@@ -1349,21 +1781,47 @@
                 card.appendChild(emptyP);
             }
 
-            if (n.location || n.reminder) {
+            // Chips: Labels, Location, Reminder
+            const hasLabels = n.labels && n.labels.length > 0;
+            const hasLocation = !!n.location;
+            const hasReminder = !!n.reminder;
+
+            if (hasLabels || hasLocation || hasReminder) {
                 const chips = document.createElement('div');
                 chips.className = 'note-chips';
-                if (n.location) {
+
+                // Labels chips
+                if (hasLabels) {
+                    n.labels.forEach(lbl => {
+                        const lChip = document.createElement('span');
+                        lChip.className = 'chip chip-label';
+                        lChip.textContent = '🏷️ ' + lbl;
+                        chips.appendChild(lChip);
+                    });
+                }
+
+                // Location chip
+                if (hasLocation) {
                     const loc = document.createElement('span');
                     loc.className = 'chip chip-location';
                     loc.textContent = '📍 ' + n.location;
+                    if (n.rawAttachedLocations && n.rawAttachedLocations.length > 0) {
+                        const firstLoc = n.rawAttachedLocations[0];
+                        const triggerDesc = firstLoc.triggerType === 'EXIT' ? 'On Departure' : 'On Arrival';
+                        const radiusDesc = firstLoc.radiusMeters ? ` (${Math.round(firstLoc.radiusMeters)}m)` : '';
+                        loc.title = `${firstLoc.name}: ${triggerDesc}${radiusDesc}${firstLoc.address ? ' - ' + firstLoc.address : ''}`;
+                    }
                     chips.appendChild(loc);
                 }
-                if (n.reminder) {
+
+                // Reminder chip
+                if (hasReminder) {
                     const rem = document.createElement('span');
                     rem.className = 'chip chip-reminder';
                     rem.textContent = '⏰ ' + n.reminder;
                     chips.appendChild(rem);
                 }
+
                 card.appendChild(chips);
             }
 
@@ -1548,6 +2006,240 @@
             return items;
         }
 
+        // Modal Subsections Management (Labels, Presets, Reminders)
+        function refreshModalLabelsUI() {
+            const container = document.getElementById('modalLabelsList');
+            container.replaceChildren();
+
+            if (modalDraftLabels.length === 0) {
+                const span = document.createElement('span');
+                span.style.fontSize = '0.82rem';
+                span.style.color = 'var(--text-secondary)';
+                span.style.fontStyle = 'italic';
+                span.textContent = 'No labels assigned';
+                container.appendChild(span);
+            } else {
+                modalDraftLabels.forEach(lbl => {
+                    const item = document.createElement('span');
+                    item.className = 'modal-chip-item';
+                    item.textContent = '🏷️ ' + lbl;
+
+                    const del = document.createElement('button');
+                    del.type = 'button';
+                    del.className = 'chip-del-btn';
+                    del.textContent = '✕';
+                    del.title = 'Remove label';
+                    del.onclick = () => {
+                        modalDraftLabels = modalDraftLabels.filter(l => l !== lbl);
+                        refreshModalLabelsUI();
+                    };
+
+                    item.appendChild(del);
+                    container.appendChild(item);
+                });
+            }
+
+            // Populate existing labels dropdown
+            const select = document.getElementById('modalExistingLabelSelect');
+            select.replaceChildren();
+            const defOpt = document.createElement('option');
+            defOpt.value = '';
+            defOpt.textContent = '+ Choose existing label...';
+            select.appendChild(defOpt);
+
+            const allLabels = Array.from(new Set([
+                ...backupCustomLabels,
+                ...notes.flatMap(n => n.labels || [])
+            ])).filter(l => l && !modalDraftLabels.includes(l)).sort();
+
+            allLabels.forEach(lbl => {
+                const opt = document.createElement('option');
+                opt.value = lbl;
+                opt.textContent = lbl;
+                select.appendChild(opt);
+            });
+        }
+
+        function addSelectedExistingLabel(e) {
+            const val = e.target.value;
+            if (val && !modalDraftLabels.includes(val)) {
+                modalDraftLabels.push(val);
+                refreshModalLabelsUI();
+            }
+            e.target.value = '';
+        }
+
+        function addCustomLabelFromInput() {
+            const input = document.getElementById('modalCustomLabelInput');
+            const val = input.value.trim();
+            if (val && !modalDraftLabels.includes(val)) {
+                modalDraftLabels.push(val);
+                if (!backupCustomLabels.includes(val)) backupCustomLabels.push(val);
+                refreshModalLabelsUI();
+                renderLabelsFilterBar();
+            }
+            input.value = '';
+        }
+
+        function handleCustomLabelKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomLabelFromInput();
+            }
+        }
+
+        function refreshModalLocationUI() {
+            const container = document.getElementById('modalLocationDisplay');
+            container.replaceChildren();
+
+            if (!modalDraftLocation) {
+                const span = document.createElement('span');
+                span.style.fontSize = '0.82rem';
+                span.style.color = 'var(--text-secondary)';
+                span.style.fontStyle = 'italic';
+                span.textContent = 'No location set';
+                container.appendChild(span);
+            } else {
+                const item = document.createElement('span');
+                item.className = 'modal-chip-item';
+                item.style.backgroundColor = '#e8f0fe';
+                item.style.color = 'var(--primary-dark)';
+                item.style.fontWeight = '600';
+                
+                const triggerDesc = modalDraftLocation.triggerType === 'EXIT' ? ' (Departure)' : ' (Arrival)';
+                item.textContent = '📍 ' + modalDraftLocation.name + triggerDesc;
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'chip-del-btn';
+                del.textContent = '✕';
+                del.title = 'Remove location';
+                del.onclick = () => {
+                    modalDraftLocation = null;
+                    refreshModalLocationUI();
+                };
+
+                item.appendChild(del);
+                container.appendChild(item);
+            }
+
+            // Populate Location Presets dropdown
+            const select = document.getElementById('modalLocationPresetSelect');
+            select.replaceChildren();
+            const defOpt = document.createElement('option');
+            defOpt.value = '';
+            defOpt.textContent = '📍 Select saved place...';
+            select.appendChild(defOpt);
+
+            backupLocationPoints.forEach((loc, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                const trig = loc.triggerType === 'EXIT' ? 'Exit' : 'Enter';
+                opt.textContent = `${loc.name} (${trig} - ${Math.round(loc.radiusMeters || 200)}m)`;
+                select.appendChild(opt);
+            });
+        }
+
+        function applyLocationPreset(e) {
+            const idx = e.target.value;
+            if (idx !== '' && backupLocationPoints[idx]) {
+                const p = backupLocationPoints[idx];
+                modalDraftLocation = {
+                    name: p.name,
+                    address: p.address || '',
+                    latitude: p.latitude,
+                    longitude: p.longitude,
+                    radiusMeters: p.radiusMeters || 200,
+                    triggerType: p.triggerType || 'ENTER'
+                };
+                refreshModalLocationUI();
+            }
+            e.target.value = '';
+        }
+
+        function setCustomLocationFromModal() {
+            const name = document.getElementById('modalCustomLocName').value.trim();
+            if (!name) return;
+            const trigger = document.getElementById('modalLocTriggerSelect').value || 'ENTER';
+            modalDraftLocation = {
+                name: name,
+                address: '',
+                latitude: 0.0,
+                longitude: 0.0,
+                radiusMeters: 200,
+                triggerType: trigger
+            };
+            document.getElementById('modalCustomLocName').value = '';
+            refreshModalLocationUI();
+        }
+
+        function refreshModalReminderUI() {
+            const container = document.getElementById('modalReminderDisplay');
+            container.replaceChildren();
+
+            if (!modalDraftReminderMillis) {
+                const span = document.createElement('span');
+                span.style.fontSize = '0.82rem';
+                span.style.color = 'var(--text-secondary)';
+                span.style.fontStyle = 'italic';
+                span.textContent = 'No time reminder set';
+                container.appendChild(span);
+                document.getElementById('modalDateTimeInput').value = '';
+            } else {
+                const item = document.createElement('span');
+                item.className = 'modal-chip-item';
+                item.style.backgroundColor = '#fef7e0';
+                item.style.color = '#b06000';
+                item.style.fontWeight = '600';
+                
+                const timeStr = new Date(modalDraftReminderMillis).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                item.textContent = '⏰ ' + timeStr;
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'chip-del-btn';
+                del.textContent = '✕';
+                del.title = 'Remove reminder';
+                del.onclick = () => {
+                    modalDraftReminderMillis = null;
+                    refreshModalReminderUI();
+                };
+
+                item.appendChild(del);
+                container.appendChild(item);
+
+                // Populate datetime input
+                try {
+                    const d = new Date(modalDraftReminderMillis);
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const localIso = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    document.getElementById('modalDateTimeInput').value = localIso;
+                } catch (_) {}
+            }
+        }
+
+        function setModalReminderFromInput() {
+            const val = document.getElementById('modalDateTimeInput').value;
+            if (!val) return;
+            const ms = new Date(val).getTime();
+            if (!isNaN(ms)) {
+                modalDraftReminderMillis = ms;
+                refreshModalReminderUI();
+            }
+        }
+
+        function setQuickReminder(type) {
+            const d = new Date();
+            if (type === 'tomorrow') {
+                d.setDate(d.getDate() + 1);
+                d.setHours(9, 0, 0, 0);
+            }
+            modalDraftReminderMillis = d.getTime();
+            refreshModalReminderUI();
+        }
+
         function openNewNoteModal(isChecklist = false) {
             currentNoteId = null;
             document.getElementById('modalTitle').value = '';
@@ -1555,6 +2247,15 @@
             selectedColor = '#ffffff';
             document.getElementById('modalCard').style.backgroundColor = selectedColor;
             document.getElementById('btnDeleteNote').style.display = 'none';
+            document.getElementById('btnModalArchive').style.display = 'none';
+
+            modalDraftLabels = [];
+            modalDraftLocation = null;
+            modalDraftReminderMillis = null;
+
+            refreshModalLabelsUI();
+            refreshModalLocationUI();
+            refreshModalReminderUI();
 
             setModalMode(isChecklist);
             if (isChecklist) {
@@ -1580,6 +2281,26 @@
             selectedColor = note.color || '#ffffff';
             document.getElementById('modalCard').style.backgroundColor = selectedColor;
             document.getElementById('btnDeleteNote').style.display = 'inline-block';
+            
+            const archBtn = document.getElementById('btnModalArchive');
+            archBtn.style.display = 'inline-block';
+            archBtn.textContent = note.isArchived ? '📦 Unarchive' : '📦 Archive';
+
+            modalDraftLabels = Array.isArray(note.labels) ? [...note.labels] : [];
+            
+            if (note.rawAttachedLocations && note.rawAttachedLocations.length > 0) {
+                modalDraftLocation = { ...note.rawAttachedLocations[0] };
+            } else if (note.location) {
+                modalDraftLocation = { name: note.location, triggerType: 'ENTER', radiusMeters: 200 };
+            } else {
+                modalDraftLocation = null;
+            }
+
+            modalDraftReminderMillis = note.timeReminderMillis || null;
+
+            refreshModalLabelsUI();
+            refreshModalLocationUI();
+            refreshModalReminderUI();
 
             const hasChecklist = note.checklistItems && note.checklistItems.length > 0;
             if (hasChecklist) {
@@ -1596,6 +2317,21 @@
         function setCardColor(color) {
             selectedColor = color;
             document.getElementById('modalCard').style.backgroundColor = color;
+        }
+
+        function toggleCurrentNoteArchive() {
+            if (currentNoteId) {
+                const note = notes.find(n => n.id === currentNoteId);
+                if (note) {
+                    note.isArchived = !note.isArchived;
+                    if (note.isArchived) note.isPinned = false;
+                    note.updatedAt = Date.now();
+                    saveToLocal();
+                    renderNotes();
+                    closeModal();
+                    if (accessToken) debouncedUploadToDrive(500);
+                }
+            }
         }
 
         function saveNote() {
@@ -1620,9 +2356,25 @@
                 content = document.getElementById('modalContent').value.trim();
             }
 
-            if (!title && !content && checklistItems.length === 0) {
+            if (!title && !content && checklistItems.length === 0 && !modalDraftLocation && !modalDraftReminderMillis) {
                 closeModal();
                 return;
+            }
+
+            // Derive reminder string
+            let reminderStr = null;
+            if (modalDraftReminderMillis) {
+                reminderStr = new Date(modalDraftReminderMillis).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+            }
+
+            // Derive location string & raw location
+            let locationStr = null;
+            let rawLocations = [];
+            if (modalDraftLocation) {
+                locationStr = modalDraftLocation.name;
+                rawLocations = [modalDraftLocation];
             }
 
             if (currentNoteId) {
@@ -1630,6 +2382,12 @@
                 if (note) {
                     note.title = title;
                     note.color = selectedColor;
+                    note.labels = [...modalDraftLabels];
+                    note.location = locationStr;
+                    note.rawAttachedLocations = rawLocations;
+                    note.rawAttachedLocationNames = locationStr ? [locationStr] : [];
+                    note.timeReminderMillis = modalDraftReminderMillis;
+                    note.reminder = reminderStr;
                     note.updatedAt = Date.now();
                     if (isChecklist) {
                         note.checklistItems = checklistItems;
@@ -1649,6 +2407,13 @@
                     type: isChecklist ? 'CHECKLIST' : 'TEXT',
                     color: selectedColor,
                     isPinned: false,
+                    isArchived: (currentView === 'archive'),
+                    labels: [...modalDraftLabels],
+                    location: locationStr,
+                    rawAttachedLocations: rawLocations,
+                    rawAttachedLocationNames: locationStr ? [locationStr] : [],
+                    timeReminderMillis: modalDraftReminderMillis,
+                    reminder: reminderStr,
                     checklistItems: isChecklist ? checklistItems : [],
                     createdAt: Date.now(),
                     updatedAt: Date.now()
@@ -1656,15 +2421,27 @@
             }
 
             saveToLocal();
+            renderLabelsFilterBar();
             renderNotes();
             closeModal();
             if (accessToken) debouncedUploadToDrive(500);
         }
 
+        // Soft-delete with tombstone recording
         function deleteCurrentNote() {
             if (currentNoteId) {
+                const noteToDelete = notes.find(n => n.id === currentNoteId);
+                if (noteToDelete) {
+                    deletedNotes.push({
+                        title: noteToDelete.title || '',
+                        createdAt: noteToDelete.createdAt || 0,
+                        deletedAt: Date.now()
+                    });
+                    saveDeletedNotesToLocal();
+                }
                 notes = notes.filter(n => n.id !== currentNoteId);
                 saveToLocal();
+                renderLabelsFilterBar();
                 renderNotes();
                 if (accessToken) uploadNotesToDrive();
             }
@@ -1681,6 +2458,95 @@
             }
         }
 
+        // Saved Places Modal Handling
+        function openPlacesModal() {
+            const container = document.getElementById('placesListContainer');
+            container.replaceChildren();
+
+            if (backupLocationPoints.length === 0) {
+                const emptyP = document.createElement('p');
+                emptyP.style.fontStyle = 'italic';
+                emptyP.style.color = 'var(--text-secondary)';
+                emptyP.style.padding = '0.5rem 0';
+                emptyP.textContent = 'No saved places found. Add one below or sync from KeepLocate on Android.';
+                container.appendChild(emptyP);
+            } else {
+                backupLocationPoints.forEach((p, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'place-item-card';
+
+                    const info = document.createElement('div');
+                    const title = document.createElement('div');
+                    title.style.fontWeight = '600';
+                    title.textContent = '📍 ' + p.name;
+                    
+                    const sub = document.createElement('div');
+                    sub.style.fontSize = '0.8rem';
+                    sub.style.color = 'var(--text-secondary)';
+                    const trig = p.triggerType === 'EXIT' ? 'Departure' : 'Arrival';
+                    sub.textContent = `${trig} trigger (${Math.round(p.radiusMeters || 200)}m)${p.address ? ' • ' + p.address : ''}`;
+
+                    info.appendChild(title);
+                    info.appendChild(sub);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn btn-sm';
+                    delBtn.style.color = '#d93025';
+                    delBtn.textContent = '✕';
+                    delBtn.title = 'Remove place preset';
+                    delBtn.onclick = () => {
+                        backupLocationPoints.splice(idx, 1);
+                        openPlacesModal();
+                        updateCounts();
+                        if (accessToken) debouncedUploadToDrive(1000);
+                    };
+
+                    card.appendChild(info);
+                    card.appendChild(delBtn);
+                    container.appendChild(card);
+                });
+            }
+
+            document.getElementById('placesModal').classList.add('open');
+        }
+
+        function closePlacesModal() {
+            document.getElementById('placesModal').classList.remove('open');
+        }
+
+        function handlePlacesOverlayClick(e) {
+            if (e.target.id === 'placesModal') {
+                closePlacesModal();
+            }
+        }
+
+        function addNewPlacePreset() {
+            const name = document.getElementById('newPlaceName').value.trim();
+            if (!name) return;
+            const address = document.getElementById('newPlaceAddress').value.trim();
+            const lat = parseFloat(document.getElementById('newPlaceLat').value) || 0.0;
+            const lng = parseFloat(document.getElementById('newPlaceLng').value) || 0.0;
+            const trigger = document.getElementById('newPlaceTrigger').value || 'ENTER';
+
+            backupLocationPoints.push({
+                name: name,
+                address: address,
+                latitude: lat,
+                longitude: lng,
+                radiusMeters: 200,
+                triggerType: trigger
+            });
+
+            document.getElementById('newPlaceName').value = '';
+            document.getElementById('newPlaceAddress').value = '';
+            document.getElementById('newPlaceLat').value = '';
+            document.getElementById('newPlaceLng').value = '';
+
+            openPlacesModal();
+            updateCounts();
+            if (accessToken) debouncedUploadToDrive(1000);
+        }
+
         // File Import Handling
         function openFilePicker() {
             document.getElementById('backupFileInput').click();
@@ -1695,7 +2561,7 @@
                 const content = e.target.result;
                 parseAndApplyBackupJson(content);
                 const p = document.createElement('p');
-                p.textContent = 'Successfully imported notes from ' + file.name + '. You can now view and edit them in KeepLocate Web.';
+                p.textContent = 'Successfully imported notes from ' + file.name + '. You can now view, edit, and sync them with Google Drive.';
                 showInfoModalNode('Backup Imported', p);
                 if (accessToken) uploadNotesToDrive();
             };
